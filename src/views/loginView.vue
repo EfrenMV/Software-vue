@@ -56,7 +56,7 @@
 
 .ejemploMenu{
     width: 345px;
-    height: 700px;
+    height: 650px;
     background-color: rgb(89, 92, 110);
   }
 
