@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { Wifi } from 'lucide-vue-next';
+import { Wifi } from 'lucide-vue-next'; /*https://lucide.dev/ */
 import { Battery } from 'lucide-vue-next';
 
 </script>
