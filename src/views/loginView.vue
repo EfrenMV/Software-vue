@@ -1,6 +1,6 @@
 <template>
   <Header class="hd"></Header>
-  <div class="ejemploMenu">
+  <div class="contenedor">
     <div class="box">
 
       <div class="box_img">
@@ -54,7 +54,7 @@
   stroke: aliceblue;
 }
 
-.ejemploMenu{
+.contenedor{
     width: 345px;
     height: 650px;
     background-color: rgb(89, 92, 110);

@@ -49,7 +49,7 @@
     font-size: 20px;
     color: white;
     cursor: pointer;
-  }
+   }
   
   .diagonal {
     height: 4px;

@@ -18,7 +18,7 @@ import Header from '@/components/Header.vue'
 <style setup>
 .ejemploMenu{
     width: 345px;
-    height: 700px;
+    height: 6500px;
   }
 
   .box{
