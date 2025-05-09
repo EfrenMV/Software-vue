@@ -83,6 +83,7 @@ import Header from '@/components/Header.vue'
      margin-top: -10px;
      padding: 10px 50px;
      border-radius: 5px;
+     margin: 0px;
      border-color: #544c4c2a;
    }
 
@@ -96,7 +97,10 @@ import Header from '@/components/Header.vue'
 
    .input-container .tx, .tx1{
     font-weight: bold;
+    font-family: "Open Sans";
+    font-size: 14px;
     }
+    
 
   .btnSave{
     padding: 10px 50px;
