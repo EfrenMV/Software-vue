@@ -9,6 +9,10 @@ const routes = [
     name: 'ejMenu', 
     component:() => import ('@/views/menuUsoEjemplo.vue') 
   },
+  { path: '/usuario', 
+    name: 'usuario', 
+    component:() => import ('@/views/usuario.vue')
+  },
  ]
 
 const router = createRouter({
