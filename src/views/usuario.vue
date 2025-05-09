@@ -81,11 +81,12 @@ import Header from '@/components/Header.vue'
   
   .input-container input{
      margin-top: -10px;
-     padding: 10px 50px;
+     padding: 10px 15px;
+     width: 70%;
      border-radius: 5px;
      margin: 0px;
      border-color: #544c4c2a;
-   }
+    }
 
    .input-container .tx{
      margin-right: 200px;
@@ -126,11 +127,16 @@ import Header from '@/components/Header.vue'
 
     /* Optenida del Header.vue*/
   .box_img{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 30px;
-  }
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   margin-top: 30px;
+
+   /* Imagen estrellas */
+   background-image: url('../components/icons/background_stars.png');
+   background-size: cover;
+   background-position: center;
+   }
 
   .box_img p{
    font-family: "Open Sans";
