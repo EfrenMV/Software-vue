@@ -17,6 +17,10 @@ const routes = [
     name: 'vehiculos', 
     component:() => import ('@/views/VehiculosView.vue') 
   },
+   { path: '/graficas', 
+    name: 'graficas', 
+    component:() => import ('@/views/graficas.vue') 
+  },
  ]
 
 const router = createRouter({
