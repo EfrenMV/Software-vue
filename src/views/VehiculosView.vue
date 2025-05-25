@@ -19,6 +19,7 @@
         v-for="vehiculo in vehiculosFiltrados"
         :key="vehiculo.placa"
         class="vehiculo-card"
+        @click="$router.push(`/vehiculo/${vehiculo.placa}`)"
       >
         <div class="estado-badge" :class="vehiculo.estado">{{ vehiculo.estadoTexto }}</div>
         <img :src="vehiculo.imagen" class="imagen-vehiculo" />
