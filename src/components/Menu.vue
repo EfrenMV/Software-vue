@@ -3,8 +3,10 @@
       <div class="Menu">
         <div class="icon-container">
           <!-- Carro -->
+          <router-link to="/vehiculos">
           <i class="fas fa-car icon"></i>
-  
+          </router-link>
+
           <!-- Llave inglesa -->
           <i class="fas fa-wrench icon"></i>
   
