@@ -81,6 +81,7 @@ import Header from '@/components/Header.vue'
   display: flex;
   gap: 15px;
   align-items: center;
+
 }
 
 .imagen-vehiculo {
@@ -114,7 +115,7 @@ import Header from '@/components/Header.vue'
 }
 
 .vehiculo-card {
-  background-color: white;
+  background-color: #2c3e50;
   border-radius: 10px;
   padding: 15px;
   margin-bottom: 15px;
