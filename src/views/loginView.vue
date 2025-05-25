@@ -66,6 +66,8 @@
           <button class="btn-secondary" @click="closeModal">Cerrar</button>
           <button v-if="isFormValid" class="btn-primary" @click="continuar">Continuar</button>
         </div>
+
+
       </div>
     </div>
   </div>
@@ -231,7 +233,7 @@ const continuar = () => {
   object-fit: contain;
 }
 
-/* Estilos del Modal/Popup - Ahora dentro del contenedor */
+/* Estilos del popup */
 .modal-overlay {
   position: absolute; /* Cambiado de fixed a absolute */
   top: 0;
@@ -307,31 +309,33 @@ const continuar = () => {
   padding: 12px 0;
 }
 
+/* Para el icono de correcto */
 .success-content .icon-success {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 50px; /* Reducido */
-  height: 50px; /* Reducido */
+  width: 50px; 
+  height: 50px; 
   background-color: #4CAF50;
   color: white;
   border-radius: 50%;
-  font-size: 24px; /* Reducido */
+  font-size: 24px; 
   font-weight: bold;
   margin-bottom: 12px;
   animation: successPop 0.5s ease-out;
 }
 
+/* Para el icono de error */
 .error-content .icon-error {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 50px; /* Reducido */
-  height: 50px; /* Reducido */
+  width: 50px;  
+  height: 50px;  
   background-color: #FF9800;
   color: white;
   border-radius: 50%;
-  font-size: 24px; /* Reducido */
+  font-size: 24px;  
   font-weight: bold;
   margin-bottom: 12px;
   animation: errorShake 0.5s ease-out;
@@ -352,7 +356,7 @@ const continuar = () => {
 .modal-body h4 {
   margin: 0 0 6px 0;
   color: #333;
-  font-size: 18px; /* Reducido */
+  font-size: 18px;  
   font-weight: 600;
 }
 
@@ -360,7 +364,7 @@ const continuar = () => {
   margin: 0;
   color: #666;
   line-height: 1.4;
-  font-size: 13px; /* Reducido */
+  font-size: 13px;  
 }
 
 .modal-footer {
@@ -370,7 +374,7 @@ const continuar = () => {
 
 .btn-secondary {
   flex: 1;
-  padding: 10px 16px; /* Reducido */
+  padding: 10px 16px;  
   background-color: #f5f5f5;
   color: #333;
   border: 1px solid #e0e0e0;
@@ -378,7 +382,7 @@ const continuar = () => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 13px; /* Reducido */
+  font-size: 13px;  
 }
 
 .btn-secondary:hover {
@@ -388,7 +392,7 @@ const continuar = () => {
 
 .btn-primary {
   flex: 1;
-  padding: 10px 16px; /* Reducido */
+  padding: 10px 16px; 
   background-color: rgb(245, 129, 31);
   color: white;
   border: none;
@@ -396,7 +400,7 @@ const continuar = () => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 13px; /* Reducido */
+  font-size: 13px;  
 }
 
 .btn-primary:hover {
