@@ -4,10 +4,6 @@ import router from './router'
 import { createPinia } from 'pinia'
 
 
-import '@fortawesome/fontawesome-free/css/all.css'
-import '@fortawesome/fontawesome-free/js/all.js'
-
-
 //cambio
 // Se crea la aplicación
 const app = createApp(App)

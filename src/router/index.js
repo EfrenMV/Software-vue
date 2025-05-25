@@ -37,6 +37,13 @@ const routes = [
     name: 'graficas',
     component:() => import ('@/views/graficas.vue')
   },
+
+{
+  path: '/menu-nerudo',
+  name: 'MenuNerudo',
+  component: () => import('@/views/MenuNerudo.vue')
+}
+
  ]
 
 const router = createRouter({
