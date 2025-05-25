@@ -38,17 +38,18 @@
 
     </div>
 
-    <!-- Modal/Popup dentro del contenedor -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <!-- Header del modal -->
-        <div class="modal-header">
+    <!-- Popup dentro del contenedor -->
+    <div v-if="showpopup" class="popup-filtro" @click="closepopup">
+      <div class="popup-content" @click.stop>
+      
+        <!-- Header del popup -->
+        <div class="popup-header">
           <h3>{{ isFormValid ? 'Estado del Login' : 'Campos Requeridos' }}</h3>
-          <button class="close-btn" @click="closeModal">×</button>
+          <button class="close-btn" @click="closepopup">×</button>
         </div>
 
-        <!-- Contenido del modal -->
-        <div class="modal-body">
+        <!-- Contenido del popup -->
+        <div class="popup-body">
           <div v-if="isFormValid" class="success-content">
             <div class="icon-success">✓</div>
             <h4>¡Login Exitoso!</h4>
@@ -61,9 +62,9 @@
           </div>
         </div>
 
-        <!-- Botones del modal -->
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="closeModal">Cerrar</button>
+        <!-- Botones del popup -->
+        <div class="popup-footer">
+          <button class="btn-secondary" @click="closepopup">Cerrar</button>
           <button v-if="isFormValid" class="btn-primary" @click="continuar">Continuar</button>
         </div>
 
@@ -79,34 +80,43 @@ import Header from '@/components/Header.vue'
 
 const usuario = ref('')
 const contraseña = ref('')
-const showModal = ref(false)
+const showpopup = ref(false)
 const isLoading = ref(false)
+
+
 
 const isFormValid = computed(() => {
   return usuario.value.trim() && contraseña.value.trim()
 })
 
+
+/* Esto hace la validacion*/
 const handleLogin = () => {
+  
+  /* Si no es valido manda el de error*/
   if (!isFormValid.value) {
-    showModal.value = true
+    showpopup.value = true
     return
   }
   
+  /* Si es valido manda el cargando*/
   isLoading.value = true
   
-  // Simular proceso de login
+  // Esto es simplemente para que haga la funcion de cargando cuando es valido
   setTimeout(() => {
     isLoading.value = false
-    showModal.value = true
+    showpopup.value = true
   }, 2000)
 }
 
-const closeModal = () => {
-  showModal.value = false
+
+/* Esto es para cerrar el popup */
+const closepopup = () => {
+  showpopup.value = false
 }
 
 const continuar = () => {
-  closeModal()
+  closepopup()
   // Aquí iría tu lógica de redirección
   console.log('Redirigiendo al dashboard...')
 }
@@ -128,7 +138,7 @@ const continuar = () => {
     width: 345px;
     height: 650px;
     background-color: rgb(89, 92, 110);
-    position: relative; /* Añadido para posicionar el modal */
+    position: relative; /* Añadido para posicionar del popup */
   }
 
 .box{
@@ -234,8 +244,10 @@ const continuar = () => {
 }
 
 /* Estilos del popup */
-.modal-overlay {
-  position: absolute; /* Cambiado de fixed a absolute */
+
+/*Esto es para el filtro de fondo */
+.popup-filtro {
+  position: absolute;  
   top: 0;
   left: 0;
   width: 100%;
@@ -249,18 +261,18 @@ const continuar = () => {
   border-radius: 0; /* Para que coincida con el contenedor si tiene bordes redondeados */
 }
 
-.modal-content {
+.popup-content {
   background: white;
   border-radius: 12px;
   padding: 20px;
   width: 85%; /* Reducido para que quepa mejor en el contenedor */
   max-width: 280px; /* Ajustado al ancho del contenedor */
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-  animation: modalSlide 0.3s ease-out;
+  animation: popupSlide 0.3s ease-out;
   position: relative;
 }
 
-@keyframes modalSlide {
+@keyframes popupSlide {
   from {
     opacity: 0;
     transform: translateY(15px) scale(0.95);
@@ -271,7 +283,7 @@ const continuar = () => {
   }
 }
 
-.modal-header {
+.popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -280,7 +292,7 @@ const continuar = () => {
   padding-bottom: 12px;
 }
 
-.modal-header h3 {
+.popup-header h3 {
   margin: 0;
   color: #333;
   font-size: 16px; /* Reducido para móvil */
@@ -303,7 +315,7 @@ const continuar = () => {
   color: #333;
 }
 
-.modal-body {
+.popup-body {
   text-align: center;
   margin-bottom: 20px;
   padding: 12px 0;
@@ -353,21 +365,21 @@ const continuar = () => {
   75% { transform: translateX(3px); }
 }
 
-.modal-body h4 {
+.popup-body h4 {
   margin: 0 0 6px 0;
   color: #333;
   font-size: 18px;  
   font-weight: 600;
 }
 
-.modal-body p {
+.popup-body p {
   margin: 0;
   color: #666;
   line-height: 1.4;
   font-size: 13px;  
 }
 
-.modal-footer {
+.popup-footer {
   display: flex;
   gap: 10px;
 }
