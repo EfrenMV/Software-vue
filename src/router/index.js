@@ -31,8 +31,12 @@ const routes = [
     path: '/vehiculo/:placa/reparacion',
     name: 'RegistrarReparacion',
     component: () => import('@/views/RegistrarReparacionView.vue')
-  }
+  },
 
+   { path: '/graficas',
+    name: 'graficas',
+    component:() => import ('@/views/graficas.vue')
+  },
  ]
 
 const router = createRouter({

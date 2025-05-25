@@ -112,6 +112,10 @@ import Header from '@/components/Header.vue'
     border-radius: 30px;
   }
 
+  .btnSave:hover{
+    cursor: pointer;
+  }
+
   .btnPerfil{
     padding: 8px 40px;
     margin: 60px 0;
