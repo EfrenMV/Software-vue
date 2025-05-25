@@ -9,7 +9,10 @@
           <i class="fas fa-wrench icon"></i>
   
           <!-- Usuario -->
+          <router-link to="/usuario">
           <i class="fas fa-user icon"></i>
+          </router-link>
+
         </div>
       </div>
       
