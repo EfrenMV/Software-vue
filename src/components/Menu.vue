@@ -8,7 +8,9 @@
           </router-link>
 
           <!-- Llave inglesa -->
+           <RouterLink to="/menu-nerudo">
           <i class="fas fa-wrench icon"></i>
+          </RouterLink>
   
           <!-- Usuario -->
           <router-link to="/usuario">
