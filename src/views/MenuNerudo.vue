@@ -6,13 +6,10 @@
       <div class="vehiculo-card operativo">
         <div class="contenido-vehiculo">
           <img class="imagen-vehiculo" src="/img/vehiculos/onix.png" alt="Nissan Sedan Azul">
-          <div class="detalles-vehiculo">
+          <div class="texto-vehiculo">
             <h3>Nissan Sedan Azul</h3>
-            <div class="info-vehiculo">
-              <span class="placa">PFX-266</span>
-              <span class="reparacion">27/03/2024</span>
-            </div>
-            <div class="estado-badge operativo">Operativo</div>
+            <p><strong>Placa PFX-266</strong></p>
+            <p>Ult Reparación: 27-03-2024</p>
           </div>
         </div>
       </div>
@@ -20,14 +17,11 @@
       <!-- Vehículo 2 -->
       <div class="vehiculo-card reparacion">
         <div class="contenido-vehiculo">
-          <img class="imagen-vehiculo"  src="/img/vehiculos/onix.png" alt="BMW Serie 1 Azul">
-          <div class="detalles-vehiculo">
+          <img class="imagen-vehiculo" src="/img/vehiculos/onix.png" alt="BMW Serie 1 Azul">
+          <div class="texto-vehiculo">
             <h3>BMW Serie 1 Azul</h3>
-            <div class="info-vehiculo">
-              <span class="placa">MWY-666</span>
-              <span class="reparacion">02/04/2024</span>
-            </div>
-            <div class="estado-badge reparacion">En reparación</div>
+            <p><strong>Placa MWY-666</strong></p>
+            <p>Ult Reparación: 02-04-2024</p>
           </div>
         </div>
       </div>
@@ -35,14 +29,37 @@
       <!-- Vehículo 3 -->
       <div class="vehiculo-card fuera-servicio">
         <div class="contenido-vehiculo">
-          <img class="imagen-vehiculo"  src="/img/vehiculos/onix.png" alt="JEEP Grand Cherokee Gris">
-          <div class="detalles-vehiculo">
+          <img class="imagen-vehiculo" src="/img/vehiculos/onix.png" alt="JEEP Grand Cherokee Gris">
+          <div class="texto-vehiculo">
+            <div class="estado-label">Fuera de Servicio</div>
             <h3>JEEP Grand Cherokee Gris</h3>
-            <div class="info-vehiculo">
-              <span class="placa">PFX-266</span>
-              <span class="reparacion">27/03/2024</span>
-            </div>
-            <div class="estado-badge fuera-servicio">Fuera de servicio</div>
+            <p><strong>Placa PFX-266</strong></p>
+            <p>Ult Reparación: 27-03-2024</p>
+          </div>
+        </div>
+      </div>
+
+       <!-- Vehículo 3 -->
+      <div class="vehiculo-card fuera-servicio">
+        <div class="contenido-vehiculo">
+          <img class="imagen-vehiculo" src="/img/vehiculos/onix.png" alt="JEEP Grand Cherokee Gris">
+          <div class="texto-vehiculo">
+            <div class="estado-label">Fuera de Servicio</div>
+            <h3>JEEP Grand Cherokee Gris</h3>
+            <p><strong>Placa PFX-266</strong></p>
+            <p>Ult Reparación: 27-03-2024</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehículo 4 -->
+      <div class="vehiculo-card fuera-servicio">
+        <div class="contenido-vehiculo">
+          <img class="imagen-vehiculo" src="/img/vehiculos/onix.png" alt="Ford Mustang">
+          <div class="texto-vehiculo">
+            <h3>Ford Mustang</h3>
+            <p><strong>Placa MNN-777</strong></p>
+            <p>Ult Reparación: 27-03-2024</p>
           </div>
         </div>
       </div>
@@ -58,6 +75,31 @@ import Header from '@/components/Header.vue'
 </script>
 
 <style scoped>
+
+
+.contenido-vehiculo {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+
+}
+
+.imagen-vehiculo {
+   height: 3rem ;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.texto-vehiculo {
+  flex: 1;
+}
+
+
+.estado-label {
+  margin-bottom: 5px;
+}
+
 .vehiculos-view {
   width: 345px;
   height: 650px;
@@ -73,76 +115,42 @@ import Header from '@/components/Header.vue'
 }
 
 .vehiculo-card {
-  background-color: white;
+  background-color: #2c3e50;
   border-radius: 10px;
   padding: 15px;
   margin-bottom: 15px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.contenido-vehiculo {
-  display: flex;
-  gap: 15px;
-}
-
-.imagen-vehiculo {
-  width: 100px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.detalles-vehiculo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-h3 {
-  margin: 0;
+.vehiculo-card h3 {
+  margin: 0 0 5px 0;
   color: #333;
-  font-size: 16px;
-  font-weight: 600;
 }
 
-.info-vehiculo {
-  display: flex;
-  gap: 15px;
+.vehiculo-card p {
   margin: 5px 0;
-}
-
-.placa {
   color: #666;
   font-size: 14px;
+}
+
+.operativo {
+  border-left: 4px solid #4CAF50;
 }
 
 .reparacion {
-  color: #666;
-  font-size: 14px;
+  border-left: 4px solid #FFC107;
 }
 
-.estado-badge {
-  display: inline-block;
+.fuera-servicio {
+  border-left: 4px solid #9E9E9E;
+}
+
+.estado-label {
+  background-color: #9E9E9E;
+  color: white;
   padding: 3px 10px;
-  border-radius: 12px;
+  border-radius: 15px;
   font-size: 12px;
-  font-weight: 500;
-  width: fit-content;
-}
-
-.estado-badge.operativo {
-  background-color: #E8F5E9;
-  color: #2E7D32;
-}
-
-.estado-badge.reparacion {
-  background-color: #FFF8E1;
-  color: #FF8F00;
-}
-
-.estado-badge.fuera-servicio {
-  background-color: #F5F5F5;
-  color: #616161;
+  display: inline-block;
 }
 </style>
