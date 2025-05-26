@@ -22,9 +22,6 @@ const routes = [
   name: 'MenuNerudo',
 component: () => import('@/views/MenuNerudo.vue'),
 },
-
-
-
   {
     path: '/reporteReparacion',
     name: 'reporteReparacion',
@@ -40,6 +37,11 @@ component: () => import('@/views/MenuNerudo.vue'),
     name: 'rechazado',
     component: () => import('@/views/rechazado.vue')
 
+  },
+  {
+    path: '/graficas',
+    name: 'graficas',
+    component: () => import('@/views/graficas.vue')
   },
 
 {
