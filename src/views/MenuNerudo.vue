@@ -50,8 +50,8 @@
         </div>
       </div>
     </div>
-
     <Menu></Menu>
+
   </div>
 </template>
 
@@ -182,16 +182,29 @@
     margin: 0 auto;
   }
 
+  
+  .box{
+     display: flex;
+     flex-direction: column;
+     justify-content: start;
+     align-items: center;
+    background-color: #f5f5f5;
+     width: 100%;
+     height: 560px;
+  }
+
+  /*
   .box {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 560px;
     overflow-y: auto;
     padding: 15px;
     background-color: #f5f5f5;
-    position:relative;
     right:5px;
   }
-
+*/
   .vehiculo-card {
     width: 85%;
     background-color: #2c3e50;
