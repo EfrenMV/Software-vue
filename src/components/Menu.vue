@@ -3,13 +3,20 @@
       <div class="Menu">
         <div class="icon-container">
           <!-- Carro -->
+          <router-link to="/vehiculos">
           <i class="fas fa-car icon"></i>
-  
+          </router-link>
+
           <!-- Llave inglesa -->
+           <RouterLink to="/menu-nerudo">
           <i class="fas fa-wrench icon"></i>
+          </RouterLink>
   
           <!-- Usuario -->
+          <router-link to="/usuario">
           <i class="fas fa-user icon"></i>
+          </router-link>
+
         </div>
       </div>
       
