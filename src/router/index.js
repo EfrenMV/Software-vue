@@ -13,10 +13,21 @@ const routes = [
     name: 'usuario', 
     component:() => import ('@/views/usuario.vue')
   },
-  { path: '/vehiculos', 
-    name: 'vehiculos', 
-    component:() => import ('@/views/VehiculosView.vue') 
+
+  { path: '/reporteReparacion', 
+    name: 'reporteReparacion', 
+    component:() => import ('@/views/reporteReparacion.vue') 
   },
+  {
+    path: '/aprobado',
+    name: 'aprobado',
+    component: () => import('@/views/aprobado.vue')
+  },
+  {
+    path: '/rechazado',
+    name: 'rechazado',
+    component: () => import('@/views/rechazado.vue')
+  }
  ]
 
 const router = createRouter({
