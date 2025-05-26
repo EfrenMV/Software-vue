@@ -1,68 +1,62 @@
 <template>
-  <Header></Header>
-  
-  <div class="p-4 flex flex-col min-h-screen bg-white">
+  <Header />
+
+  <div class="contenedor-reporte">
     <!-- Encabezado -->
-    <div class="mb-4">
-      <h2 class="font-bold text-sm">BMW Sedan Azul</h2>
-      <span class="bg-yellow-400 text-white text-xs px-2 py-1 rounded">En reparación</span>
-      <div class="flex items-center mt-2">
-        <img src="/src/components/icons/bmw.png" alt="Auto" class="w-20 h-14 object-cover mr-2" />
-        <div>
-          <p class="text-sm font-semibold">Juan Pérez Cruz</p>
-          <p class="text-sm font-bold">Placa PFX-266</p>
-          <p class="text-xs text-gray-500">Últ. Reparación: 27-03-2025</p>
+    <div class="encabezado">
+      <h2>BMW Sedan Azul</h2>
+      <span class="etiqueta-estado">En reparación</span>
+      <div class="info-auto">
+        <img src="/src/components/icons/bmw.png" alt="auto" class="imagen-auto" />
+        <div class="datos-vehiculo">
+          <p class="nombre">Juan Pérez Cruz</p>
+          <p class="placa">Placa PFX-266</p>
+          <p class="ultima">Últ. Reparación: 27-03-2025</p>
         </div>
       </div>
     </div>
 
     <!-- Reporte -->
-    <div class="bg-gray-100 p-4 rounded-xl text-sm text-gray-700 mb-6">
-      <h3 class="font-semibold mb-2">Reporte de Reparación</h3>
+    <div class="reporte">
+      <h3>Reporte de Reparación</h3>
       <p>
-        Coche BMW presenta fallas en ....
+        Coche BMW presenta fallas en el sistema eléctrico, especialmente en los sensores de reversa y el alternador.
       </p>
     </div>
 
     <!-- Botones -->
-    <div class="flex justify-around mb-6">
+    <div class="botones">
       <button
         @click="seleccionar('aceptado')"
-        :class="boton === 'aceptado' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'"
-        class="w-14 h-14 rounded-full text-xl"
-      >
-        ✔
-      </button>
+        :class="boton === 'aceptado' ? 'activo-verde' : 'inactivo'"
+      >✔</button>
+
       <button
         @click="seleccionar('rechazado')"
-        :class="boton === 'rechazado' ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'"
-        class="w-14 h-14 rounded-full text-xl"
-      >
-        ✖
-      </button>
+        :class="boton === 'rechazado' ? 'activo-rojo' : 'inactivo'"
+      >✖</button>
     </div>
 
-    <!-- Barra deslizable -->
-    <div class="mt-auto">
+    <!-- Continuar -->
+    <div v-if="boton" class="continuar">
       <button
-        v-if="boton"
         @click="continuar"
-        :class="boton === 'aceptado' ? 'bg-green-500' : 'bg-red-500'"
-        class="w-full py-3 text-white font-bold rounded-full transition-colors duration-300"
+        :class="boton === 'aceptado' ? 'continuar-verde' : 'continuar-rojo'"
       >
         Deslizar para continuar
       </button>
     </div>
   </div>
-  <Menu></Menu>
+
+  <Menu />
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import Header from '@/components/Header.vue';
-import Menu from '@/components/Menu.vue';
+import Header from '@/components/Header.vue'
+import Menu from '@/components/Menu.vue'
 
 const boton = ref(null)
 const router = useRouter()
@@ -81,5 +75,118 @@ function continuar() {
 </script>
 
 <style scoped>
-/* Puedes agregar animaciones o más estilos aquí */
+.contenedor-reporte {
+  padding: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.encabezado h2 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.etiqueta-estado {
+  background-color: #facc15;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.info-auto {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.imagen-auto {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.nombre {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.placa {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.ultima {
+  font-size: 12px;
+  color: gray;
+}
+
+.reporte {
+  background-color: #f3f3f3;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+.reporte h3 {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.botones {
+  display: flex;
+  justify-content: space-around;
+}
+
+.botones button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 24px;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.inactivo {
+  background-color: #e5e5e5;
+  color: #6b7280;
+}
+
+.activo-verde {
+  background-color: #22c55e;
+  color: white;
+}
+
+.activo-rojo {
+  background-color: #ef4444;
+  color: white;
+}
+
+.continuar button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 24px;
+  color: white;
+  font-weight: bold;
+  border: none;
+  font-size: 16px;
+}
+
+.continuar-verde {
+  background-color: #22c55e;
+}
+
+.continuar-rojo {
+  background-color: #ef4444;
+}
 </style>
