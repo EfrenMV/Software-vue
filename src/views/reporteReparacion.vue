@@ -1,4 +1,6 @@
 <template>
+  <Header></Header>
+  
   <div class="p-4 flex flex-col min-h-screen bg-white">
     <!-- Encabezado -->
     <div class="mb-4">
@@ -52,11 +54,15 @@
       </button>
     </div>
   </div>
+  <Menu></Menu>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+
+import Header from '@/components/Header.vue';
+import Menu from '@/components/Menu.vue';
 
 const boton = ref(null)
 const router = useRouter()
