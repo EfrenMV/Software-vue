@@ -13,37 +13,10 @@ const routes = [
     name: 'usuario',
     component:() => import ('@/views/usuario.vue')
   },
-  { path: '/vehiculos',
-    name: 'vehiculos',
-    component:() => import ('@/views/VehiculosView.vue')
+  { path: '/vehiculos', 
+    name: 'vehiculos', 
+    component:() => import ('@/views/VehiculosView.vue') 
   },
-{
-  path: '/vehiculo/:id',
-  name: 'DetalleVehiculo',
-  component: () => import('@/views/DetalleVehiculoView.vue')
-},
-{
-   path: '/vehiculo/:placa',
-    name: 'DetalleVehiculo',
-    component: () => import('@/views/DetalleVehiculoView.vue')
-},
- {
-    path: '/vehiculo/:placa/reparacion',
-    name: 'RegistrarReparacion',
-    component: () => import('@/views/RegistrarReparacionView.vue')
-  },
-
-   { path: '/graficas',
-    name: 'graficas',
-    component:() => import ('@/views/graficas.vue')
-  },
-
-{
-  path: '/menu-nerudo',
-  name: 'MenuNerudo',
-  component: () => import('@/views/MenuNerudo.vue')
-}
-
  ]
 
 const router = createRouter({
