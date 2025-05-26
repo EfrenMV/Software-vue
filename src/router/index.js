@@ -13,10 +13,15 @@ const routes = [
     name: 'usuario',
     component:() => import ('@/views/usuario.vue')
   },
-  { path: '/vehiculos', 
-    name: 'vehiculos', 
-    component:() => import ('@/views/VehiculosView.vue') 
+  { path: '/vehiculos',
+    name: 'vehiculos',
+    component:() => import ('@/views/VehiculosView.vue')
   },
+ {
+  path: '/menu-nerudo',
+  name: 'MenuNerudo',
+component: () => import('@/views/MenuNerudo.vue'),
+},
   {
     path: '/reporteReparacion',
     name: 'reporteReparacion',
@@ -31,7 +36,26 @@ const routes = [
     path: '/rechazado',
     name: 'rechazado',
     component: () => import('@/views/rechazado.vue')
-  }
+
+  },
+  {
+    path: '/graficas',
+    name: 'graficas',
+    component: () => import('@/views/graficas.vue')
+  },
+
+{
+  path: '/menu-nerudo',
+  name: 'MenuNerudo',
+component: () => import('@/views/MenuNerudo.vue'),
+},
+{
+  path: '/vehiculo/:placa',
+  name: 'VehiculoDetalle',
+  component: () => import('@/views/DetalleVehiculoView.vue') // ✅ Vista separada
+}
+
+
  ]
 
 const router = createRouter({
