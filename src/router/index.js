@@ -13,10 +13,18 @@ const routes = [
     name: 'usuario',
     component:() => import ('@/views/usuario.vue')
   },
-  { path: '/vehiculos', 
-    name: 'vehiculos', 
-    component:() => import ('@/views/VehiculosView.vue') 
+  { path: '/vehiculos',
+    name: 'vehiculos',
+    component:() => import ('@/views/VehiculosView.vue')
   },
+ {
+  path: '/menu-nerudo',
+  name: 'MenuNerudo',
+component: () => import('@/views/MenuNerudo.vue'),
+}
+
+
+
  ]
 
 const router = createRouter({

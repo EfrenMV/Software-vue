@@ -7,7 +7,12 @@
       <div class="barra-superior">
         <div class="busqueda">
           <i class="fas fa-search"></i>
-          <input type="text" placeholder="Buscar...">
+          <input
+            type="text"
+            placeholder="Buscar vehículo..."
+            v-model="terminoBusqueda"
+            @input="buscarVehiculos"
+          >
         </div>
         <div class="filtros">
           <button class="filtro-btn" :class="{ 'activo-operativo': filtroActivo === 'Operativos' }"
@@ -25,13 +30,20 @@
         </div>
       </div>
 
+      <!-- Mensaje cuando no hay resultados -->
+      <div v-if="vehiculosFiltrados.length === 0" class="no-resultados">
+        <i class="fas fa-search"></i>
+        <p>No se encontraron vehículos que coincidan con tu búsqueda</p>
+        <small>Intenta con otro término de búsqueda o cambia el filtro</small>
+      </div>
+
       <!-- Vehículos dinámicos -->
       <div v-for="vehiculo in vehiculosFiltrados" :key="vehiculo.id" class="vehiculo-card" :class="vehiculo.estado">
         <div class="contenido-vehiculo">
           <img class="imagen-vehiculo" :src="vehiculo.imagen" :alt="vehiculo.nombre">
           <div class="texto-vehiculo">
             <div v-if="vehiculo.tieneLabel" class="estado-label">Fuera de Servicio</div>
-            <h3>{{ vehiculo.nombre }}</h3>
+            <h3 v-html="resaltarTexto(vehiculo.nombre)"></h3>
             <p><strong>Placa {{ vehiculo.placa }}</strong></p>
             <p>Ult Reparación: {{ vehiculo.ultReparacion }}</p>
           </div>
@@ -43,16 +55,15 @@
   </div>
 </template>
 
-
-
 <script setup>
   import { ref, computed } from 'vue';
   import Menu from '@/components/Menu.vue';
   import Header from '@/components/Header.vue';
 
   const filtroActivo = ref('Operativos'); // Filtro inicial
+  const terminoBusqueda = ref(''); // Término de búsqueda
 
-  // Array con todos los vehículos (convertidos a datos dinámicos)
+  // Es una arreglo, esta con todos los vehículos (convertidos a datos dinámicos)
   const vehiculos = ref([
     {
       id: 1,
@@ -105,20 +116,43 @@
     }
   ]);
 
-  // Filtrado reactivo
+  // Filtrado reactivo que incluye búsqueda y filtro por estado
   const vehiculosFiltrados = computed(() => {
-    return vehiculos.value.filter(vehiculo => {
+    let resultado = vehiculos.value;
+
+    // Filtrar por término de búsqueda (por nombre del vehículo)
+    if (terminoBusqueda.value.trim()) {
+      resultado = resultado.filter(vehiculo =>
+        vehiculo.nombre.toLowerCase().includes(terminoBusqueda.value.toLowerCase().trim())
+      );
+    }
+
+    // Filtrar por estado
+    resultado = resultado.filter(vehiculo => {
       if (filtroActivo.value === 'Operativos') return vehiculo.estado === 'operativo';
       if (filtroActivo.value === 'Reparación') return vehiculo.estado === 'reparacion';
       if (filtroActivo.value === 'Inactivos') return vehiculo.estado === 'fuera-servicio';
-      return true; // Si no hay filtro (opcional)
+      return true;
     });
+
+    return resultado;
   });
+
+  // Función para resaltar el texto buscado en el nombre
+  const resaltarTexto = (texto) => {
+    if (!terminoBusqueda.value.trim()) return texto;
+
+    const regex = new RegExp(`(${terminoBusqueda.value.trim()})`, 'gi');
+    return texto.replace(regex, '<mark>$1</mark>');
+  };
+
+  // Función opcional para el evento de búsqueda (se puede usar para analytics, etc.)
+  const buscarVehiculos = () => {
+    // Aquí puedes agregar lógica adicional si necesitas
+    // Por ejemplo: enviar analytics, debounce, etc.
+    console.log('Buscando:', terminoBusqueda.value);
+  };
 </script>
-
-
-
-
 
 <style scoped>
   .contenido-vehiculo {
@@ -138,7 +172,6 @@
     flex: 1;
   }
 
-
   .estado-label {
     margin-bottom: 5px;
   }
@@ -155,6 +188,8 @@
     overflow-y: auto;
     padding: 15px;
     background-color: #f5f5f5;
+    position:relative;
+    right:5px;
   }
 
   .vehiculo-card {
@@ -172,7 +207,6 @@
     margin: 0 0 5px 0;
     color: #fff;
     font-size: 1rem;
-
   }
 
   .vehiculo-card p {
@@ -202,6 +236,39 @@
     display: inline-block;
   }
 
+  /* Estilos para el mensaje de no resultados */
+  .no-resultados {
+    text-align: center;
+    padding: 40px 20px;
+    color: #7f8c8d;
+  }
+
+  .no-resultados i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+  }
+
+  .no-resultados p {
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #34495e;
+  }
+
+  .no-resultados small {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  /* Estilos para resaltar texto encontrado */
+  :deep(mark) {
+    background-color: #f39c12;
+    color: white;
+    padding: 1px 3px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+
   /* ////////////////////////////////// */
   /* Iniciamos la barra superior */
 
@@ -213,7 +280,7 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    width: 90%;
+    width: 86%;
     max-width: 100%;
   }
 
