@@ -46,7 +46,14 @@ component: () => import('@/views/MenuNerudo.vue'),
   path: '/menu-nerudo',
   name: 'MenuNerudo',
 component: () => import('@/views/MenuNerudo.vue'),
+},
+{
+  path: '/vehiculo/:placa',
+  name: 'VehiculoDetalle',
+  component: () => import('@/views/DetalleVehiculoView.vue') // ✅ Vista separada
 }
+
+
  ]
 
 const router = createRouter({
