@@ -50,16 +50,21 @@
 
         <!-- Contenido del popup -->
         <div class="popup-body">
+          
+          <!-- Para cuando el login se realiza correctamente -->
           <div v-if="isFormValid" class="success-content">
             <div class="icon-success">✓</div>
             <h4>¡Login Exitoso!</h4>
             <p>Bienvenido de vuelta, <strong>{{ usuario }}</strong></p>
           </div>
+
+          <!-- Para cuando el login da error -->
           <div v-else class="error-content">
             <div class="icon-error">⚠</div>
             <h4>Campos Incompletos</h4>
             <p>Por favor, completa todos los campos para continuar.</p>
           </div>
+
         </div>
 
         <!-- Botones del popup -->
