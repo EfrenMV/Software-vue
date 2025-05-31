@@ -3,7 +3,7 @@
       <div class="Menu">
         <div class="icon-container">
           <!-- Carro -->
-          <router-link to="/vehiculos">
+          <router-link to="/ejMenu">
           <i class="fas fa-car icon"></i>
           </router-link>
 
