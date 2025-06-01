@@ -4,8 +4,11 @@
   <div class="contenedor-reporte">
     <!-- Encabezado -->
     <div class="encabezado">
-      <h2>BMW Sedan Azul</h2>
-      <span class="etiqueta-estado">En reparación</span>
+      <div class="titulo-estado">
+        <h2>BMW Sedan Azul</h2>
+        <span class="etiqueta-estado">En reparación</span>
+      </div>
+
       <div class="info-auto">
         <img src="/src/components/icons/bmw.png" alt="auto" class="imagen-auto" />
         <div class="datos-vehiculo">
@@ -38,27 +41,44 @@
     </div>
 
     <!-- Deslizador -->
-<div v-if="boton" class="slider-container">
-  <div
-    class="slider"
-    :class="{ 'deslizado-exito': deslizado }"
-    @mousedown="iniciarDesliz"
-    @touchstart="iniciarDesliz"
-  >
-    <div
-      class="slider-thumb"
-      :style="{ left: thumbX + 'px' }"
-    >
-      ➤
+    <div v-if="boton" class="slider-container">
+      <div
+        class="slider"
+        :class="{ 
+          'deslizado-exito': deslizado && boton === 'aceptado',
+          'deslizado-rechazo': deslizado && boton === 'rechazado',
+          'slider-verde': boton === 'aceptado',
+          'slider-rojo': boton === 'rechazado'
+        }"
+        @mousedown="iniciarDesliz"
+        @touchstart="iniciarDesliz"
+      >
+        <div
+          class="slider-thumb"
+          :class="{
+            'thumb-verde': boton === 'aceptado',
+            'thumb-rojo': boton === 'rechazado'
+          }"
+          :style="{ left: thumbX + 'px' }"
+        >
+          ➤
+        </div>
+        <span v-if="!deslizado">Desliza para continuar</span>
+        <span v-else>¡Redirigiendo!</span>
+      </div>
     </div>
-    <span v-if="!deslizado">Desliza para continuar</span>
-    <span v-else>¡Redirigiendo!</span>
-  </div>
-</div>
 
   </div>
 
   <Menu />
+
+  <Modal
+    v-if="mostrarModal"
+    :titulo="boton === 'aceptado' ? '¡Reparación Aprobada!' : '¡Reparación Rechazada!'"
+    :mensaje="boton === 'aceptado'
+        ? 'El reporte fue aceptado exitosamente. Puedes continuar con el siguiente paso.'
+        : 'El reporte fue rechazado. Informa al cliente o revalúa el diagnóstico.'"
+  />
 </template>
 
 <script setup>
@@ -67,9 +87,9 @@ import { useRouter } from 'vue-router'
 
 import Header from '@/components/Header.vue'
 import Menu from '@/components/Menu.vue'
+import Modal from '@/components/Modal.vue'
 
-
-
+const mostrarModal = ref(false)
 const boton = ref(null)
 const router = useRouter()
 
@@ -79,7 +99,7 @@ function seleccionar(opcion) {
 
 const thumbX = ref(0)
 const deslizado = ref(false)
-const maxX = 220 // puedes ajustar el máximo para deslizar
+const maxX = 220
 
 function iniciarDesliz(event) {
   const startX = event.touches ? event.touches[0].clientX : event.clientX
@@ -93,16 +113,15 @@ function iniciarDesliz(event) {
   function terminar() {
     if (thumbX.value >= maxX) {
       deslizado.value = true
+      mostrarModal.value = true
+
       setTimeout(() => {
-        if (boton.value === 'aceptado') {
-          router.push('/aprobado')
-        } else if (boton.value === 'rechazado') {
-          router.push('/rechazado')
-        }
-      }, 400)
+        router.push('/menu-nerudo')
+      }, 2000)
     } else {
       thumbX.value = 0
     }
+
     window.removeEventListener('mousemove', mover)
     window.removeEventListener('mouseup', terminar)
     window.removeEventListener('touchmove', mover)
@@ -115,137 +134,169 @@ function iniciarDesliz(event) {
   window.addEventListener('touchend', terminar)
 }
 
+function cerrarModal() {
+  mostrarModal.value = false
+  if (boton.value === 'aceptado') {
+    router.push('/aprobado')
+  } else if (boton.value === 'rechazado') {
+    router.push('/rechazado')
+  }
+}
 </script>
 
 <style scoped>
 .contenedor-reporte {
-  padding: 16px;
-  max-width: 400px;
+  padding: 20px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   background-color: #ffffff;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+.encabezado {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.encabezado h2 {
-  font-size: 18px;
+.titulo-estado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titulo-estado h2 {
+  font-size: 20px;
   font-weight: bold;
-  margin-bottom: 4px;
+  margin: 0;
+  color: #1f2937;
 }
 
 .etiqueta-estado {
-  background-color: #facc15;
-  color: white;
+  background-color: #fbbf24;
+  color: #000;
   font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: bold;
 }
 
 .info-auto {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 16px;
+  background-color: #f9fafb;
+  padding: 16px;
+  border-radius: 12px;
 }
 
 .imagen-auto {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
+  flex-shrink: 0;
+}
+
+.datos-vehiculo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .nombre {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
+  margin: 0;
+  color: #1f2937;
 }
 
 .placa {
   font-weight: bold;
   font-size: 14px;
+  margin: 0;
+  color: #374151;
 }
 
 .ultima {
   font-size: 12px;
-  color: gray;
+  color: #6b7280;
+  margin: 0;
 }
 
 .reporte {
-  background-color: #f3f3f3;
-  padding: 16px;
+  background-color: #f3f4f6;
+  padding: 20px;
   border-radius: 12px;
   font-size: 14px;
-  color: #333;
+  color: #374151;
 }
 
 .reporte h3 {
   font-weight: bold;
-  margin-bottom: 8px;
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.reporte p {
+  margin: 0;
+  line-height: 1.5;
 }
 
 .botones {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 40px;
+  margin: 20px 0;
 }
 
 .botones button {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   font-size: 24px;
   border: none;
-  transition: background-color 0.3s ease;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .inactivo {
-  background-color: #e5e5e5;
+  background-color: #e5e7eb;
   color: #6b7280;
 }
 
 .activo-verde {
-  background-color: #22c55e;
+  background-color: #10b981;
   color: white;
+  transform: scale(1.1);
 }
 
 .activo-rojo {
   background-color: #ef4444;
   color: white;
-}
-
-.continuar button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 24px;
-  color: white;
-  font-weight: bold;
-  border: none;
-  font-size: 16px;
-}
-
-.continuar-verde {
-  background-color: #22c55e;
-}
-
-.continuar-rojo {
-  background-color: #ef4444;
+  transform: scale(1.1);
 }
 
 .slider-container {
-  padding: 0 4px;
+  margin-top: 16px;
 }
 
 .slider {
   position: relative;
-  height: 50px;
-  background-color: #e5e5e5;
-  border-radius: 25px;
+  height: 56px;
+  border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #444;
+  color: white;
   font-weight: bold;
   font-size: 14px;
   user-select: none;
@@ -253,30 +304,60 @@ function iniciarDesliz(event) {
   transition: background-color 0.3s ease;
 }
 
+/* Estilos para slider verde (aceptado) */
+.slider-verde {
+  background-color: #10b981;
+}
+
+/* Estilos para slider rojo (rechazado) */
+.slider-rojo {
+  background-color: #ef4444;
+}
+
 .slider-thumb {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 50px;
-  height: 50px;
-  background-color: #444;
-  color: white;
+  top: 4px;
+  left: 4px;
+  width: 48px;
+  height: 48px;
+  background-color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 1;
-  transition: background 0.3s;
+  transition: all 0.3s ease;
+  font-size: 18px;
+  font-weight: bold;
 }
 
+/* Thumb para slider verde */
+.thumb-verde {
+  color: #10b981;
+}
+
+/* Thumb para slider rojo */
+.thumb-rojo {
+  color: #ef4444;
+}
+
+/* Estados cuando está deslizado */
 .deslizado-exito {
-  background-color: #22c55e;
-  color: white;
+  background-color: #059669 !important;
 }
 
+.deslizado-rechazo {
+  background-color: #dc2626 !important;
+}
 
+.deslizado-exito .slider-thumb {
+  background-color: #ffffff;
+  color: #059669;
+}
 
-
-
+.deslizado-rechazo .slider-thumb {
+  background-color: #ffffff;
+  color: #dc2626;
+}
 </style>
