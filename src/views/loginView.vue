@@ -44,7 +44,7 @@
       
         <!-- Header del popup -->
         <div class="popup-header">
-          <h3>{{ isFormValid ? 'Estado del Login' : 'Campos Requeridos' }}</h3>
+          <h3>{{ loginSuccess ? 'Acceso Concedido' : 'Usuario no encontrado' }}</h3>
           <button class="close-btn" @click="closepopup">×</button>
         </div>
 
@@ -52,7 +52,7 @@
         <div class="popup-body">
           
           <!-- Para cuando el login se realiza correctamente -->
-          <div v-if="isFormValid" class="success-content">
+            <div v-if="loginSuccess" class="success-content">
             <div class="icon-success">✓</div>
             <h4>¡Login Exitoso!</h4>
             <p>Bienvenido de vuelta, <strong>{{ usuario }}</strong></p>
@@ -82,50 +82,58 @@
 <script setup>
 import { ref, computed } from 'vue'
 import Header from '@/components/Header.vue'
+import { supabase } from '@/supabase.js' 
 
 const usuario = ref('')
 const contraseña = ref('')
 const showpopup = ref(false)
 const isLoading = ref(false)
-
-
+const loginSuccess = ref(false) 
 
 const isFormValid = computed(() => {
   return usuario.value.trim() && contraseña.value.trim()
 })
 
-
-/* Esto hace la validacion*/
-const handleLogin = () => {
-  
-  /* Si no es valido manda el de error*/
+const handleLogin = async () => {
   if (!isFormValid.value) {
+    loginSuccess.value = false
     showpopup.value = true
     return
   }
-  
-  /* Si es valido manda el cargando*/
+
   isLoading.value = true
-  
-  // Esto es simplemente para que haga la funcion de cargando cuando es valido
-  setTimeout(() => {
-    isLoading.value = false
+
+  // Consultar la tabla "usuarios" en Supabase
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('*')
+    .eq('nombre_usuario', usuario.value)
+    .eq('contrasena', contraseña.value)
+    .single()
+
+  isLoading.value = false
+
+  if (error || !data) {
+    loginSuccess.value = false
     showpopup.value = true
-  }, 2000)
+    console.log('Error o usuario no encontrado:', error)
+  } else {
+    loginSuccess.value = true
+    showpopup.value = true
+    console.log('Login exitoso:', data)
+  }
 }
 
-
-/* Esto es para cerrar el popup */
 const closepopup = () => {
   showpopup.value = false
 }
 
 const continuar = () => {
   closepopup()
-  // Aquí iría tu lógica de redirección
   console.log('Redirigiendo al dashboard...')
 }
 </script>
+
 
 <style scoped>
 
