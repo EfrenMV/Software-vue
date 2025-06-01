@@ -52,12 +52,7 @@ component: () => import('@/views/MenuNerudo.vue'),
 {
   path: '/vehiculo/:placa',
   name: 'VehiculoDetalle',
-  component: () => import('@/views/DetalleVehiculoView.vue') // ✅ Vista separada
-},
-{
-  path: '/carrito',
-  name: 'carrito',
-   component: () => import('@/views/DetalleVehiculoView.vue')
+  component: () => import('@/views/DetalleVehiculoView.vue')
 }
 
 

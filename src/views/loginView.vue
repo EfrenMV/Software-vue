@@ -44,7 +44,7 @@
       
         <!-- Header del popup -->
         <div class="popup-header">
-          <h3>{{ isFormValid ? '' : '' }}</h3>
+          <h3>{{ isFormValid ? 'Estado del Login' : 'Campos Requeridos' }}</h3>
           <button class="close-btn" @click="closepopup">×</button>
         </div>
 
@@ -69,7 +69,8 @@
 
         <!-- Botones del popup -->
         <div class="popup-footer">
-      
+          <button class="btn-secondary" @click="closepopup">Cerrar</button>
+          <button v-if="isFormValid" class="btn-primary" @click="continuar">Continuar</button>
         </div>
 
 
@@ -221,7 +222,7 @@ const continuar = () => {
 
 .texto-container {
   display: flex;
-  gap: 10px;  
+  gap: 10px; /* Espacio entre los textos */
   color: white;
   margin-bottom: 15px;
 }
@@ -299,7 +300,7 @@ const continuar = () => {
 .popup-header h3 {
   margin: 0;
   color: #333;
-  font-size: 16px;  
+  font-size: 16px; /* Reducido para móvil */
   font-weight: 600;
 }
 
