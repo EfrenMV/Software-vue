@@ -37,15 +37,25 @@
       >✖</button>
     </div>
 
-    <!-- Continuar -->
-    <div v-if="boton" class="continuar">
-      <button
-        @click="continuar"
-        :class="boton === 'aceptado' ? 'continuar-verde' : 'continuar-rojo'"
-      >
-        Deslizar para continuar
-      </button>
+    <!-- Deslizador -->
+<div v-if="boton" class="slider-container">
+  <div
+    class="slider"
+    :class="{ 'deslizado-exito': deslizado }"
+    @mousedown="iniciarDesliz"
+    @touchstart="iniciarDesliz"
+  >
+    <div
+      class="slider-thumb"
+      :style="{ left: thumbX + 'px' }"
+    >
+      ➤
     </div>
+    <span v-if="!deslizado">Desliza para continuar</span>
+    <span v-else>¡Redirigiendo!</span>
+  </div>
+</div>
+
   </div>
 
   <Menu />
@@ -58,6 +68,8 @@ import { useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
 import Menu from '@/components/Menu.vue'
 
+
+
 const boton = ref(null)
 const router = useRouter()
 
@@ -65,13 +77,44 @@ function seleccionar(opcion) {
   boton.value = opcion
 }
 
-function continuar() {
-  if (boton.value === 'aceptado') {
-    router.push('/aprobado')
-  } else if (boton.value === 'rechazado') {
-    router.push('/rechazado')
+const thumbX = ref(0)
+const deslizado = ref(false)
+const maxX = 220 // puedes ajustar el máximo para deslizar
+
+function iniciarDesliz(event) {
+  const startX = event.touches ? event.touches[0].clientX : event.clientX
+
+  function mover(e) {
+    const currentX = e.touches ? e.touches[0].clientX : e.clientX
+    const delta = Math.min(currentX - startX, maxX)
+    thumbX.value = delta > 0 ? delta : 0
   }
+
+  function terminar() {
+    if (thumbX.value >= maxX) {
+      deslizado.value = true
+      setTimeout(() => {
+        if (boton.value === 'aceptado') {
+          router.push('/aprobado')
+        } else if (boton.value === 'rechazado') {
+          router.push('/rechazado')
+        }
+      }, 400)
+    } else {
+      thumbX.value = 0
+    }
+    window.removeEventListener('mousemove', mover)
+    window.removeEventListener('mouseup', terminar)
+    window.removeEventListener('touchmove', mover)
+    window.removeEventListener('touchend', terminar)
+  }
+
+  window.addEventListener('mousemove', mover)
+  window.addEventListener('mouseup', terminar)
+  window.addEventListener('touchmove', mover)
+  window.addEventListener('touchend', terminar)
 }
+
 </script>
 
 <style scoped>
@@ -189,4 +232,51 @@ function continuar() {
 .continuar-rojo {
   background-color: #ef4444;
 }
+
+.slider-container {
+  padding: 0 4px;
+}
+
+.slider {
+  position: relative;
+  height: 50px;
+  background-color: #e5e5e5;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444;
+  font-weight: bold;
+  font-size: 14px;
+  user-select: none;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+.slider-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  background-color: #444;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.3s;
+}
+
+.deslizado-exito {
+  background-color: #22c55e;
+  color: white;
+}
+
+
+
+
+
 </style>
