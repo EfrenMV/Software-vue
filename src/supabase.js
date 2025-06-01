@@ -1,7 +1,4 @@
-<<<<<<< Updated upstream
-=======
 // src/supabase.js
->>>>>>> Stashed changes
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://tocfyjdjpqwikzhsrupu.supabase.co'

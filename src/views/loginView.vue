@@ -88,21 +88,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import Header from '@/components/Header.vue'
-<<<<<<< Updated upstream
-import { supabase } from '@/supabase.js' 
-=======
-import { supabase } from '@/supabase.js' // Asegúrate de importar bien
->>>>>>> Stashed changes
+ import { supabase } from '@/supabase.js' // Asegúrate de importar bien
 
 const usuario = ref('')
 const contraseña = ref('')
 const showpopup = ref(false)
 const isLoading = ref(false)
-<<<<<<< Updated upstream
-const loginSuccess = ref(false) 
-=======
-const loginSuccess = ref(false) // Nuevo para saber si fue login correcto
->>>>>>> Stashed changes
+ const loginSuccess = ref(false) // Nuevo para saber si fue login correcto
 
 const isFormValid = computed(() => {
   return usuario.value.trim() && contraseña.value.trim()
