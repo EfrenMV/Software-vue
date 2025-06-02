@@ -3,7 +3,6 @@
     <Header></Header>
 
     <div class="contenido-scrollable">
-
       <!-- Loading state -->
       <div v-if="loading" class="loading-container">
         Cargando información del vehículo...
