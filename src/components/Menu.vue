@@ -2,8 +2,8 @@
     <div class="contenedor">
       <div class="Menu">
         <div class="icon-container">
-          <!-- Carro -->     
-          <router-link to="/vehiculos" class="icon-link" :class="{ active: $route.path === '/vehiculos' }">
+          <!-- Carro -->
+          <router-link to="/HotWhe" class="icon-link" :class="{ active: $route.path === '/HotWhe' }">
           <i class="fas fa-car icon"></i>
         </router-link>
 
@@ -19,22 +19,22 @@
 
         </div>
       </div>
-      
+
       <div class="cDiagonal">
         <div class="diagonal"></div>
       </div>
     </div>
   </template>
-  
+
   <style>
-  
+
   .contenedor {
     display: flex;
     flex-direction: column;
-    align-items: center;     /* Centra horizontalmente */
-    justify-content: center; /* Centra verticalmente si tienes altura */
+    align-items: center;
+    justify-content: center;
     }
-  
+
   .Menu {
     width: 325px;
     height: 50px;
@@ -44,7 +44,7 @@
     justify-content: center;
     background-color: black;
   }
-  
+
 .icon-container {
   display: flex;
   justify-content: space-around;
@@ -64,7 +64,7 @@
 }
 
 .icon-link.active {
-  background-color: #3d4044bd; /* Color gris para el estado activo */
+  background-color: #3d4044bd;
 }
 
 .icon {
@@ -87,4 +87,3 @@
   align-items: center;
 }
   </style>
-  

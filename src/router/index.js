@@ -42,6 +42,11 @@ component: () => import('@/views/MenuNerudo.vue'),
   path: '/vehiculo/:placa',
   name: 'VehiculoDetalle',
   component: () => import('@/views/DetalleVehiculoView.vue')
+},
+{
+  path: '/HotWhe',
+  name: 'carrito_hot_wheels',
+  component: () => import('@/views/carrito_hot_wheels.vue')
 }
 
  ]
