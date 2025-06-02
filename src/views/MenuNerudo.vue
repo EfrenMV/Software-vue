@@ -78,14 +78,15 @@
                   :alt="vehiculo.marca + ' ' + vehiculo.modelo"
                   @error="handleImageError"
                 >
+                <!-- Precio movido debajo de la imagen -->
+                <div class="costo-vehiculo">
+                  <span class="costo-label">$ Pendiente</span>
+                </div>
               </div>
               <div class="texto-vehiculo">
                 <h3 v-html="resaltarTexto(vehiculo.marca + ' ' + vehiculo.modelo)"></h3>
                 <p><strong>Placa {{ vehiculo.placa }}</strong></p>
                 <p>Últ. Reparación: {{ formatearFecha(vehiculo.ultima_reparacion) }}</p>
-              </div>
-              <div class="costo-vehiculo">
-                <span class="costo-label">{{ formatearCosto(0) }}</span>
               </div>
             </div>
           </div>
@@ -351,6 +352,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
+  gap: 8px; /* Espacio entre imagen y precio */
 }
 
 .imagen-vehiculo {
@@ -367,6 +369,7 @@ onMounted(() => {
 .costo-vehiculo {
   display: flex;
   align-items: center;
+  justify-content: center; /* Centrar el precio debajo de la imagen */
   flex-shrink: 0;
 }
 

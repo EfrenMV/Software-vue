@@ -1,3 +1,4 @@
+<!-- Detalles vehiculo borrador malo -->
 <template>
   <div class="detalle-vehiculo">
     <Header />
