@@ -3,7 +3,7 @@
       <div class="Menu">
         <div class="icon-container">
           <!-- Carro -->     
-          <router-link to="/ejMenu" class="icon-link" :class="{ active: $route.path === '/ejMenu' }">
+          <router-link to="/vehiculos" class="icon-link" :class="{ active: $route.path === '/vehiculos' }">
           <i class="fas fa-car icon"></i>
         </router-link>
 
