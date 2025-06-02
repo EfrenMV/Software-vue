@@ -1,4 +1,4 @@
-<!-- Hotwhe Final. Conectado & Redirige-->
+<!-- Hotwhe Final. Optimizado - Solo campos necesarios -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -91,6 +91,12 @@
         </div>
       </template>
     </div>
+
+    <!-- Botón flotante de gráficas -->
+    <button class="boton-flotante" @click="abrirGraficas">
+      <i class="fas fa-chart-line"></i>
+    </button>
+
     <Menu></Menu>
   </div>
 </template>
@@ -111,6 +117,9 @@ const terminoBusqueda = ref('');
 const loading = ref(false);
 const error = ref(null);
 const searchTimeout = ref(null);
+
+// Campos específicos que necesitamos (evita SELECT *)
+const camposNecesarios = 'id, marca, modelo, placa, estado_actual, imagen, ultima_reparacion';
 
 // Computed properties
 const vehiculosFiltrados = computed(() => {
@@ -146,16 +155,16 @@ const contadorEstados = computed(() => {
   return contador;
 });
 
-// Métodos
+// Métodos optimizados
 const cargarVehiculos = async () => {
   try {
     loading.value = true;
     error.value = null;
 
-    // Consulta a Supabase - cargar todos los vehículos
+    // Consulta optimizada - solo campos necesarios
     const { data, error: sbError } = await supabase
       .from('vehiculo')
-      .select('*')
+      .select(camposNecesarios)
       .order('id', { ascending: true });
 
     if (sbError) throw sbError;
@@ -177,9 +186,10 @@ const buscarVehiculos = async () => {
     loading.value = true;
 
     if (terminoBusqueda.value.trim()) {
+      // Consulta optimizada con campos específicos
       const { data, error: sbError } = await supabase
         .from('vehiculo')
-        .select('*')
+        .select(camposNecesarios)
         .or(`marca.ilike.%${terminoBusqueda.value}%,modelo.ilike.%${terminoBusqueda.value}%,placa.ilike.%${terminoBusqueda.value}%`)
         .order('id', { ascending: true });
 
@@ -187,7 +197,7 @@ const buscarVehiculos = async () => {
 
       vehiculos.value = data;
     } else {
-      // Si no hay búsqueda, mostrar todos
+      // Si no hay búsqueda, mostrar todos los cargados
       vehiculos.value = todosLosVehiculos.value;
     }
 
@@ -212,6 +222,10 @@ const cambiarFiltro = (nuevoFiltro) => {
 const verDetalleVehiculo = (id) => {
   router.push({ name: 'DTCONECT', params: { id } })
 }
+
+const abrirGraficas = () => {
+  router.push({ name: 'graficas' });
+};
 
 // Funciones de utilidad
 const getEstadoClass = (estado) => {
@@ -574,11 +588,43 @@ onMounted(() => {
   background-color: #757575 !important;
 }
 
+/* Botón flotante */
+.boton-flotante {
+  position: absolute;
+  bottom: 110px; /* Encima del menú, dentro del contenedor */
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.boton-flotante:hover {
+  background-color: #333;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.boton-flotante:active {
+  transform: scale(0.95);
+}
+
 .vehiculos-view {
   width: 345px;
   height: 650px;
   margin: 0 auto;
   overflow-x: hidden;
+  position: relative;
 }
 
 .box {
