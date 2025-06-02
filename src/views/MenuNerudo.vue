@@ -48,7 +48,7 @@
               :class="{ 'activo-solicitadas': filtroActivo === 'solicitadas' }"
               @click="cambiarFiltro('solicitadas')"
             >
-              Solicitudes ({{ contadorEstados.solicitadas }})
+              Solicitud ({{ contadorEstados.solicitadas }})
             </button>
           </div>
         </div>
@@ -110,9 +110,6 @@
             @click="verDetalleSolicitud(solicitud.id)"
           >
             <div class="solicitud-header">
-              <div class="icono-refaccion">
-                <i class="fas fa-cog"></i>
-              </div>
               <div class="badge-revision">
                 REVISIÓN
               </div>
@@ -120,7 +117,12 @@
 
             <div class="contenido-solicitud">
               <div class="info-principal">
-                <h3 class="nombre-refaccion" v-html="resaltarTexto(solicitud.refaccion_nombre)"></h3>
+                <div class="nombre-refaccion-container">
+                  <div class="icono-refaccion">
+                    <i class="fas fa-wrench"></i>
+                  </div>
+                  <h3 class="nombre-refaccion" v-html="resaltarTexto(solicitud.refaccion_nombre)"></h3>
+                </div>
                 <p class="vehiculo-relacionado">
                   <i class="fas fa-truck"></i>
                   {{ solicitud.vehiculo_info || 'Vehículo no especificado' }}
@@ -638,21 +640,28 @@ onMounted(() => {
 
 .solicitud-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 12px;
+}
+
+.nombre-refaccion-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .icono-refaccion {
   background-color: #9C27B0;
   color: white;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .badge-revision {
@@ -738,9 +747,9 @@ onMounted(() => {
 .costo-total {
   background-color: #9C27B0;
   color: white;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: bold;
 }
 
