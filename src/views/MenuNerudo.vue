@@ -1,4 +1,4 @@
-<!-- MenuNerudo supabase "terminado" -->
+<!-- MenuNerudo "final" -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -32,22 +32,22 @@
           <div class="filtros">
             <button
               class="filtro-btn"
-              :class="{ 'activo-operativo': filtroActivo === 'OPERATIVO' }"
-              @click="cambiarFiltro('OPERATIVO')"
+              :class="{ 'activo-operativo': filtroActivo === 'operativo' }"
+              @click="cambiarFiltro('operativo')"
             >
               Operativos ({{ contadorEstados.operativo }})
             </button>
             <button
               class="filtro-btn"
-              :class="{ 'activo-reparacion': filtroActivo === 'REPARACION' }"
-              @click="cambiarFiltro('REPARACION')"
+              :class="{ 'activo-reparacion': filtroActivo === 'reparacion' }"
+              @click="cambiarFiltro('reparacion')"
             >
               Reparación ({{ contadorEstados.reparacion }})
             </button>
             <button
               class="filtro-btn"
-              :class="{ 'activo-inactivos': filtroActivo === 'INACTIVO' }"
-              @click="cambiarFiltro('INACTIVO')"
+              :class="{ 'activo-inactivos': filtroActivo === 'fuera_servicio' }"
+              @click="cambiarFiltro('fuera_servicio')"
             >
               Inactivos ({{ contadorEstados.inactivo }})
             </button>
@@ -67,7 +67,7 @@
             v-for="vehiculo in vehiculosFiltrados"
             :key="vehiculo.id"
             class="vehiculo-card"
-            :class="getEstadoClass(vehiculo.estado)"
+            :class="getEstadoClass(vehiculo.estado_actual)"
             @click="verDetalleVehiculo(vehiculo.id)"
           >
             <div class="contenido-vehiculo">
@@ -75,17 +75,17 @@
                 <img
                   class="imagen-vehiculo"
                   :src="vehiculo.imagen || '/img/vehiculos/default.png'"
-                  :alt="vehiculo.nombre"
+                  :alt="vehiculo.marca + ' ' + vehiculo.modelo"
                   @error="handleImageError"
                 >
               </div>
               <div class="texto-vehiculo">
-                <h3 v-html="resaltarTexto(vehiculo.nombre)"></h3>
+                <h3 v-html="resaltarTexto(vehiculo.marca + ' ' + vehiculo.modelo)"></h3>
                 <p><strong>Placa {{ vehiculo.placa }}</strong></p>
-                <p>Últ. Reparación: {{ formatearFecha(vehiculo.fecha_ultima_reparacion) }}</p>
+                <p>Últ. Reparación: {{ formatearFecha(vehiculo.ultima_reparacion) }}</p>
               </div>
               <div class="costo-vehiculo">
-                <span class="costo-label">{{ formatearCosto(vehiculo.costo) }}</span>
+                <span class="costo-label">{{ formatearCosto(0) }}</span>
               </div>
             </div>
           </div>
@@ -100,11 +100,11 @@
 import { ref, computed, onMounted } from 'vue';
 import Menu from '@/components/Menu.vue';
 import Header from '@/components/Header.vue';
-import { supabase } from '@/supabase'; // Importar cliente Supabase
+import { supabase } from '@/supabase';
 
 // Estado reactivo
 const vehiculos = ref([]);
-const filtroActivo = ref('OPERATIVO');
+const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
 const error = ref(null);
@@ -118,34 +118,32 @@ const vehiculosFiltrados = computed(() => {
   if (terminoBusqueda.value.trim()) {
     const termino = terminoBusqueda.value.toLowerCase().trim();
     resultado = resultado.filter(vehiculo =>
-      vehiculo.nombre.toLowerCase().includes(termino) ||
+      (vehiculo.marca + ' ' + vehiculo.modelo).toLowerCase().includes(termino) ||
       vehiculo.placa.toLowerCase().includes(termino)
     );
   }
 
   // Filtrar por estado
   resultado = resultado.filter(vehiculo =>
-    vehiculo.estado === filtroActivo.value
+    vehiculo.estado_actual === filtroActivo.value
   );
 
   return resultado;
 });
 
 const contadorEstados = computed(() => {
-  const contador = { operativo: 0, reparacion: 0, inactivo: 0 };
+  const contador = {
+    operativo: 0,
+    reparacion: 0,
+    inactivo: 0
+  };
+
   vehiculos.value.forEach(vehiculo => {
-    switch (vehiculo.estado) {
-      case 'OPERATIVO':
-        contador.operativo++;
-        break;
-      case 'REPARACION':
-        contador.reparacion++;
-        break;
-      case 'INACTIVO':
-        contador.inactivo++;
-        break;
-    }
+    if (vehiculo.estado_actual === 'operativo') contador.operativo++;
+    if (vehiculo.estado_actual === 'reparacion') contador.reparacion++;
+    if (vehiculo.estado_actual === 'fuera_servicio') contador.inactivo++;
   });
+
   return contador;
 });
 
@@ -158,28 +156,12 @@ const cargarVehiculos = async () => {
     // Consulta a Supabase
     const { data, error: sbError } = await supabase
       .from('vehiculo')
-      .select(`
-        id,
-        marca,
-        modelo,
-        ultima_reparacion,
-        placa,
-        estado_actual
-      `)
+      .select('*')
       .order('id', { ascending: true });
 
     if (sbError) throw sbError;
 
-    // Mapear datos de Supabase a estructura esperada
-    vehiculos.value = data.map(vehiculo => ({
-      id: vehiculo.id,
-      nombre: `${vehiculo.marca} ${vehiculo.modelo}`,
-      placa: vehiculo.placa,
-      fecha_ultima_reparacion: vehiculo.ultima_reparacion,
-      imagen: null, // Usaremos imagen por defecto
-      estado: vehiculo.estado_actual,
-      costo: 0 // Valor por defecto para costo
-    }));
+    vehiculos.value = data;
 
   } catch (err) {
     console.error('Error al cargar vehículos:', err);
@@ -189,31 +171,19 @@ const cargarVehiculos = async () => {
   }
 };
 
-const buscarVehiculos = async (termino) => {
-  if (!termino.trim()) return;
-
+const buscarVehiculos = async () => {
   try {
     loading.value = true;
 
-    // Búsqueda en Supabase
     const { data, error: sbError } = await supabase
       .from('vehiculo')
-      .select()
-      .or(`marca.ilike.%${termino}%,modelo.ilike.%${termino}%,placa.ilike.%${termino}%`)
+      .select('*')
+      .or(`marca.ilike.%${terminoBusqueda.value}%,modelo.ilike.%${terminoBusqueda.value}%,placa.ilike.%${terminoBusqueda.value}%`)
       .eq('estado_actual', filtroActivo.value);
 
     if (sbError) throw sbError;
 
-    // Mapear resultados
-    vehiculos.value = data.map(vehiculo => ({
-      id: vehiculo.id,
-      nombre: `${vehiculo.marca} ${vehiculo.modelo}`,
-      placa: vehiculo.placa,
-      fecha_ultima_reparacion: vehiculo.ultima_reparacion,
-      imagen: null,
-      estado: vehiculo.estado_actual,
-      costo: 0
-    }));
+    vehiculos.value = data;
 
   } catch (err) {
     console.error('Error en búsqueda:', err);
@@ -225,13 +195,13 @@ const buscarVehiculos = async (termino) => {
 const debounceSearch = () => {
   clearTimeout(searchTimeout.value);
   searchTimeout.value = setTimeout(() => {
-    buscarVehiculos(terminoBusqueda.value);
+    buscarVehiculos();
   }, 300);
 };
 
 const cambiarFiltro = async (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-  await buscarVehiculos(terminoBusqueda.value);
+  await buscarVehiculos();
 };
 
 const verDetalleVehiculo = (id) => {
@@ -242,9 +212,9 @@ const verDetalleVehiculo = (id) => {
 // Funciones de utilidad
 const getEstadoClass = (estado) => {
   const clases = {
-    'OPERATIVO': 'operativo',
-    'REPARACION': 'reparacion',
-    'INACTIVO': 'fuera-servicio'
+    'operativo': 'operativo',
+    'reparacion': 'reparacion',
+    'fuera_servicio': 'fuera-servicio'
   };
   return clases[estado] || '';
 };

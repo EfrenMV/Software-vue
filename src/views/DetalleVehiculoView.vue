@@ -5,20 +5,20 @@
     <div class="contenido-scrollable" v-if="vehiculo">
       <!-- Fecha dinámica -->
       <div class="fecha-reparacion">
-        Últ reparación: <strong>{{ vehiculo.ultima_reparacion_formateada || 'N/A' }}</strong>
+        Últ reparación: <strong>{{ fechaFormateada || 'N/A' }}</strong>
       </div>
 
       <!-- Estado dinámico -->
       <div
         class="estado-badge"
-        :class="vehiculo.estado_actual"
-        :style="{ backgroundColor: estadoInfo[vehiculo.estado_actual]?.fondo }"
+        :class="statusReparacion"
+        :style="{ backgroundColor: estadoInfo[statusReparacion]?.fondo }"
       >
         <span
           class="circulo"
-          :style="{ backgroundColor: estadoInfo[vehiculo.estado_actual]?.color }"
+          :style="{ backgroundColor: estadoInfo[statusReparacion]?.color }"
         ></span>
-        {{ estadoInfo[vehiculo.estado_actual]?.texto || vehiculo.estado_actual }}
+        {{ estadoInfo[statusReparacion]?.texto || statusReparacion }}
       </div>
 
       <div class="imagen-vehiculo">
@@ -33,9 +33,32 @@
 
       <!-- Información dinámica -->
       <div class="info-vehiculo">
-        <h2>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h2>
+        <h2>{{ vehiculo.modelo }}</h2>
         <h3>Placa <strong>{{ vehiculo.placa }}</strong></h3>
-        <h3 v-if="vehiculo.numero_serie">N° Serie <strong>{{ vehiculo.numero_serie }}</strong></h3>
+      </div>
+
+      <div class="descripcion">
+        <p>{{ descripcion || 'Sin descripción disponible' }}</p>
+      </div>
+
+      <!-- Detalles adicionales -->
+      <div class="detalles-adicionales">
+        <div class="detalle-item">
+          <span class="detalle-label">Mecánico:</span>
+          <span class="detalle-valor">{{ mecanicoNombre || 'No asignado' }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Horómetro:</span>
+          <span class="detalle-valor">{{ reparacion.horometro || 'N/A' }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Odómetro:</span>
+          <span class="detalle-valor">{{ reparacion.odometro || 'N/A' }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Próximo servicio:</span>
+          <span class="detalle-valor">{{ proximoServicioFormateado || 'N/A' }}</span>
+        </div>
       </div>
     </div>
 
@@ -65,31 +88,69 @@ import { supabase } from '@/supabase'
 const route = useRoute()
 const placa = route.params.placa
 const vehiculo = ref(null)
+const reparacion = ref({})
+const mecanico = ref(null)
 const cargando = ref(true)
 const error = ref(null)
 
 // Configuración de estados
 const estadoInfo = {
-  operativo: {
+  completado: {
     texto: 'Operativo',
     color: '#4CAF50',
     fondo: '#a7d782'
   },
-  en_reparacion: {
+  en_progreso: {
     texto: 'En reparación',
     color: '#FF9800',
     fondo: '#ffcc80'
   },
-  inactivo: {
-    texto: 'Inactivo',
+  pendiente: {
+    texto: 'Pendiente',
     color: '#F44336',
     fondo: '#e57373'
+  },
+  cancelado: {
+    texto: 'Cancelado',
+    color: '#9E9E9E',
+    fondo: '#eeeeee'
   }
 }
 
-// URL de imagen (puedes personalizar esto según tus necesidades)
+// Computed properties
+const statusReparacion = computed(() => {
+  return reparacion.value.status || 'pendiente'
+})
+
+const fechaFormateada = computed(() => {
+  if (reparacion.value.fecha) {
+    const fecha = new Date(reparacion.value.fecha)
+    return fecha.toLocaleDateString('es-ES')
+  }
+  return null
+})
+
+const proximoServicioFormateado = computed(() => {
+  if (reparacion.value.proximo_servicio) {
+    const fecha = new Date(reparacion.value.proximo_servicio)
+    return fecha.toLocaleDateString('es-ES')
+  }
+  return null
+})
+
 const imagenUrl = computed(() => {
-  return `/img/vehiculos/${vehiculo.value?.modelo?.toLowerCase().replace(/\s+/g, '') || 'default'}.png`
+  return vehiculo.value?.imagen_url || '/img/vehiculos/default.png'
+})
+
+const descripcion = computed(() => {
+  return reparacion.value?.diagnostico ||
+         reparacion.value?.procedimiento ||
+         vehiculo.value?.descripcion ||
+         'Sin descripción disponible'
+})
+
+const mecanicoNombre = computed(() => {
+  return mecanico.value?.nombre_completo || mecanico.value?.nombre || 'Mecánico no asignado'
 })
 
 // Manejar errores de imagen
@@ -97,33 +158,52 @@ const handleImageError = (event) => {
   event.target.src = '/img/vehiculos/default.png'
 }
 
-// Obtener datos del vehículo
+// Obtener datos del vehículo y reparación
 const cargarDatosVehiculo = async () => {
   try {
     cargando.value = true
     error.value = null
 
-    const { data, error: supabaseError } = await supabase
+    // Paso 1: Obtener vehículo por placa
+    const { data: vehiculoData, error: vehiculoError } = await supabase
       .from('vehiculo')
-      .select('id, marca, modelo, ultima_reparacion, numero_serie, placa, estado_actual')
+      .select('*')
       .eq('placa', placa)
       .single()
 
-    if (supabaseError) throw supabaseError
-    if (!data) throw new Error('Vehículo no encontrado')
+    if (vehiculoError) throw vehiculoError
+    if (!vehiculoData) throw new Error('Vehículo no encontrado')
 
-    // Formatear fecha si existe
-    if (data.ultima_reparacion) {
-      const fecha = new Date(data.ultima_reparacion)
-      if (!isNaN(fecha)) {
-        data.ultima_reparacion_formateada = fecha.toLocaleDateString('es-ES')
-      } else {
-        // Si no es una fecha válida, mostrar el valor original
-        data.ultima_reparacion_formateada = data.ultima_reparacion
+    vehiculo.value = vehiculoData
+
+    // Paso 2: Obtener última reparación del vehículo
+    const { data: reparacionData, error: reparacionError } = await supabase
+      .from('reparacion')
+      .select('*')
+      .eq('vehiculo_id', vehiculo.value.id)
+      .order('fecha', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (reparacionError) {
+      console.warn('No se encontró reparación para el vehículo:', reparacionError.message)
+    } else {
+      reparacion.value = reparacionData || {}
+
+      // Paso 3: Si hay reparación, obtener mecánico asignado
+      if (reparacionData?.mecanico_id) {
+        const { data: mecanicoData, error: mecanicoError } = await supabase
+          .from('usuario')
+          .select('id, nombre, apellido, nombre_completo')
+          .eq('id', reparacionData.mecanico_id)
+          .single()
+
+        if (!mecanicoError && mecanicoData) {
+          mecanico.value = mecanicoData
+        }
       }
     }
 
-    vehiculo.value = data
   } catch (err) {
     console.error('Error al cargar vehículo:', err)
     error.value = err.message || 'Error desconocido'
@@ -207,9 +287,44 @@ onMounted(cargarDatosVehiculo)
 
 .info-vehiculo h3 {
   font-size: 16px;
-  margin: 5px 0;
+  margin: 0;
   color: #666;
   font-weight: normal;
+}
+
+.descripcion {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.descripcion p {
+  margin: 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.detalles-adicionales {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.detalle-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.detalle-label {
+  font-weight: bold;
+  color: #666;
+}
+
+.detalle-valor {
+  color: #333;
 }
 
 .imagen-vehiculo {
