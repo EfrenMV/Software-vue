@@ -219,7 +219,7 @@ const cargarVehiculos = async () => {
     loading.value = true;
     error.value = null;
 
-    // TODO: Reemplazar con llamada real al backend
+    // Reemplazar con llamada real al backend
     // const response = await vehiculosService.obtenerTodos();
     // vehiculos.value = response.data;
 
@@ -241,7 +241,7 @@ const buscarVehiculos = async (termino) => {
   try {
     loading.value = true;
 
-    // TODO: Implementar búsqueda en backend
+    // Implementar búsqueda en backend
     // const response = await vehiculosService.buscar({
     //   termino: termino,
     //   estado: filtroActivo.value
@@ -268,12 +268,11 @@ const debounceSearch = () => {
 const cambiarFiltro = async (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
 
-  // TODO: Si quieres filtrar en backend, descomenta:
+  // filtrar en backend, descomenta:
   // await cargarVehiculos();
 };
 
 const verDetalleVehiculo = (id) => {
-  // TODO: Navegar a detalle del vehículo
   console.log('Ver detalle del vehículo:', id);
   // router.push(`/vehiculos/${id}`);
 };
