@@ -1,3 +1,4 @@
+<!-- MenuNerudo supabase "terminado" -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -70,25 +71,21 @@
             @click="verDetalleVehiculo(vehiculo.id)"
           >
             <div class="contenido-vehiculo">
-              <div class="imagen-costo-container">
+              <div class="imagen-container">
                 <img
                   class="imagen-vehiculo"
                   :src="vehiculo.imagen || '/img/vehiculos/default.png'"
                   :alt="vehiculo.nombre"
                   @error="handleImageError"
                 >
-                <div class="costo-vehiculo">
-                  <span class="costo-label">{{ formatearCosto(vehiculo.costo) }}</span>
-                </div>
               </div>
               <div class="texto-vehiculo">
-                <div class="estado-label" :class="getEstadoLabelClass(vehiculo.estado)">
-                  {{ getEstadoLabel(vehiculo.estado) }}
-                </div>
                 <h3 v-html="resaltarTexto(vehiculo.nombre)"></h3>
                 <p><strong>Placa {{ vehiculo.placa }}</strong></p>
                 <p>Últ. Reparación: {{ formatearFecha(vehiculo.fecha_ultima_reparacion) }}</p>
-                <p>Mecánico: {{ vehiculo.mecanico || 'No asignado' }}</p>
+              </div>
+              <div class="costo-vehiculo">
+                <span class="costo-label">{{ formatearCosto(vehiculo.costo) }}</span>
               </div>
             </div>
           </div>
@@ -158,7 +155,6 @@ const cargarVehiculos = async () => {
     loading.value = true;
     error.value = null;
 
-<<<<<<< HEAD
     // Consulta a Supabase
     const { data, error: sbError } = await supabase
       .from('vehiculo')
@@ -171,11 +167,6 @@ const cargarVehiculos = async () => {
         estado_actual
       `)
       .order('id', { ascending: true });
-=======
-    // TODO: Reemplazar con llamada real al backend
-    // const response = await vehiculosService.obtenerTodos();
-    // vehiculos.value = response.data;
->>>>>>> 7720a2d7835c107ebe94739db5563c173a876995
 
     if (sbError) throw sbError;
 
@@ -204,21 +195,12 @@ const buscarVehiculos = async (termino) => {
   try {
     loading.value = true;
 
-<<<<<<< HEAD
     // Búsqueda en Supabase
     const { data, error: sbError } = await supabase
       .from('vehiculo')
       .select()
       .or(`marca.ilike.%${termino}%,modelo.ilike.%${termino}%,placa.ilike.%${termino}%`)
       .eq('estado_actual', filtroActivo.value);
-=======
-    // TODO: Implementar búsqueda en backend
-    // const response = await vehiculosService.buscar({
-    //   termino: termino,
-    //   estado: filtroActivo.value
-    // });
-    // vehiculos.value = response.data;
->>>>>>> 7720a2d7835c107ebe94739db5563c173a876995
 
     if (sbError) throw sbError;
 
@@ -249,17 +231,10 @@ const debounceSearch = () => {
 
 const cambiarFiltro = async (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-<<<<<<< HEAD
   await buscarVehiculos(terminoBusqueda.value);
-=======
-
-  // TODO: Si quieres filtrar en backend, descomenta:
-  // await cargarVehiculos();
->>>>>>> 7720a2d7835c107ebe94739db5563c173a876995
 };
 
 const verDetalleVehiculo = (id) => {
-  // TODO: Navegar a detalle del vehículo
   console.log('Ver detalle del vehículo:', id);
   // router.push(`/vehiculos/${id}`);
 };
@@ -393,7 +368,7 @@ onMounted(() => {
   position: relative;
 }
 
-.imagen-costo-container {
+.imagen-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -404,23 +379,22 @@ onMounted(() => {
   height: 3rem;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 5px;
 }
 
 .texto-vehiculo {
   flex: 1;
-  min-width: 0; /* Permite que el texto se ajuste sin expandir el contenedor */
+  min-width: 0;
 }
 
 .costo-vehiculo {
   display: flex;
-  justify-content: center;
-  width: 100%;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .costo-label {
-  background-color: rgb(59, 81, 105); /* Azul más claro que el fondo pero no tan claro */
-  color: white;
+  background-color: rgb(19, 154, 124);
+  color: rgb(255, 255, 255);
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 10px;
@@ -429,7 +403,6 @@ onMounted(() => {
   border: 1px solid rgb(59, 81, 105);
 }
 
-/* Resto de estilos existentes */
 .vehiculos-view {
   width: 345px;
   height: 650px;
