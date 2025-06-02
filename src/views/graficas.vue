@@ -32,7 +32,22 @@
 <script setup>
 import Menu from '@/components/Menu.vue'
 import Header from '@/components/Header.vue'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+
+onMounted(() => {
+  // Verificar si llegó por navegación del router
+  const navigationEntry = performance.getEntriesByType('navigation')[0]
+  
+  if (navigationEntry && navigationEntry.type !== 'reload') {
+    // Si no fue una recarga, forzar recarga
+    setTimeout(() => {
+      window.location.reload()
+    })
+  }
+})
 </script>
 
 <style setup>
