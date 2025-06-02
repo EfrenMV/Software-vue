@@ -1,4 +1,4 @@
-<!-- MenuNerudo Optimizado - Una sola consulta inicial -->
+<!-- MenuNerudo.vue - Con Fichas de Solicitudes -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -45,23 +45,23 @@
             </button>
             <button
               class="filtro-btn"
-              :class="{ 'activo-inactivos': filtroActivo === 'fuera_servicio' }"
-              @click="cambiarFiltro('fuera_servicio')"
+              :class="{ 'activo-solicitadas': filtroActivo === 'solicitadas' }"
+              @click="cambiarFiltro('solicitadas')"
             >
-              Inactivos ({{ contadorEstados.inactivo }})
+              Solicitudes ({{ contadorEstados.solicitadas }})
             </button>
           </div>
         </div>
 
         <!-- Mensaje cuando no hay resultados -->
-        <div v-if="vehiculosFiltrados.length === 0 && !loading" class="no-resultados">
+        <div v-if="vehiculosFiltrados.length === 0 && solicitudesFiltradas.length === 0 && !loading" class="no-resultados">
           <i class="fas fa-search"></i>
-          <p>No se encontraron vehículos que coincidan con tu búsqueda</p>
+          <p>No se encontraron resultados que coincidan con tu búsqueda</p>
           <small>Intenta con otro término de búsqueda o cambia el filtro</small>
         </div>
 
-        <!-- Lista de Vehículos -->
-        <div class="vehiculos-lista">
+        <!-- Lista de Vehículos (para filtros operativo y reparacion) -->
+        <div v-if="filtroActivo !== 'solicitadas'" class="vehiculos-lista">
           <div
             v-for="vehiculo in vehiculosFiltrados"
             :key="vehiculo.id"
@@ -78,13 +78,70 @@
                   @error="handleImageError"
                 >
                 <div class="costo-vehiculo">
-                  <span class="costo-label">$ Pendiente</span>
+                  <span
+                    v-if="vehiculo.costoTotal > 0"
+                    class="costo-label"
+                  >
+                    {{ formatearCosto(vehiculo.costoTotal) }}
+                  </span>
+                  <span
+                    v-else
+                    class="costo-label costo-pendiente"
+                  >
+                    $ Pendiente
+                  </span>
                 </div>
               </div>
               <div class="texto-vehiculo">
                 <h3 v-html="resaltarTexto(vehiculo.marca + ' ' + vehiculo.modelo)"></h3>
                 <p><strong>Placa {{ vehiculo.placa }}</strong></p>
                 <p>Últ. Reparación: {{ formatearFecha(vehiculo.ultima_reparacion) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Solicitudes (para filtro solicitadas) -->
+        <div v-if="filtroActivo === 'solicitadas'" class="solicitudes-lista">
+          <div
+            v-for="solicitud in solicitudesFiltradas"
+            :key="solicitud.id"
+            class="solicitud-card"
+            @click="verDetalleSolicitud(solicitud.id)"
+          >
+            <div class="solicitud-header">
+              <div class="icono-refaccion">
+                <i class="fas fa-cog"></i>
+              </div>
+              <div class="badge-revision">
+                REVISIÓN
+              </div>
+            </div>
+
+            <div class="contenido-solicitud">
+              <div class="info-principal">
+                <h3 class="nombre-refaccion" v-html="resaltarTexto(solicitud.refaccion_nombre)"></h3>
+                <p class="vehiculo-relacionado">
+                  <i class="fas fa-truck"></i>
+                  {{ solicitud.vehiculo_info || 'Vehículo no especificado' }}
+                </p>
+              </div>
+
+              <div class="info-secundaria">
+                <div class="proveedor-info">
+                  <i class="fas fa-store"></i>
+                  <span>{{ solicitud.proveedor_nombre || 'Proveedor no especificado' }}</span>
+                </div>
+
+                <div class="fecha-costo">
+                  <div class="fecha-solicitud">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>{{ calcularTiempoTranscurrido(solicitud.fecha_creacion) }}</span>
+                  </div>
+                  <div class="costo-total">
+                    {{ formatearCosto(solicitud.costo_total) }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -104,7 +161,8 @@ import { supabase } from '@/supabase';
 
 // Estado reactivo
 const router = useRouter()
-const todosLosVehiculos = ref([]); // Array principal - UNA SOLA FUENTE DE DATOS
+const todosLosVehiculos = ref([]);
+const todasLasSolicitudes = ref([]); // Nueva: array para solicitudes
 const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
@@ -112,6 +170,8 @@ const error = ref(null);
 
 // COMPUTED PROPERTIES - TODO EL FILTRADO EN FRONTEND
 const vehiculosFiltrados = computed(() => {
+  if (filtroActivo.value === 'solicitadas') return [];
+
   let vehiculosFiltradosPorBusqueda = todosLosVehiculos.value;
 
   // Filtrar por búsqueda si hay término
@@ -129,14 +189,33 @@ const vehiculosFiltrados = computed(() => {
   );
 });
 
+// Nueva computed property para solicitudes
+const solicitudesFiltradas = computed(() => {
+  if (filtroActivo.value !== 'solicitadas') return [];
+
+  let solicitudesFiltradas = todasLasSolicitudes.value;
+
+  // Filtrar por búsqueda si hay término
+  if (terminoBusqueda.value.trim()) {
+    const termino = terminoBusqueda.value.toLowerCase().trim();
+    solicitudesFiltradas = todasLasSolicitudes.value.filter(solicitud =>
+      solicitud.refaccion_nombre.toLowerCase().includes(termino) ||
+      (solicitud.proveedor_nombre && solicitud.proveedor_nombre.toLowerCase().includes(termino)) ||
+      (solicitud.vehiculo_info && solicitud.vehiculo_info.toLowerCase().includes(termino))
+    );
+  }
+
+  return solicitudesFiltradas;
+});
+
 const contadorEstados = computed(() => {
   const contador = {
     operativo: 0,
     reparacion: 0,
-    inactivo: 0
+    solicitadas: 0
   };
 
-  // Filtrar por búsqueda para los contadores
+  // Filtrar por búsqueda para los contadores de vehículos
   let vehiculosParaContar = todosLosVehiculos.value;
   if (terminoBusqueda.value.trim()) {
     const termino = terminoBusqueda.value.toLowerCase().trim();
@@ -146,44 +225,183 @@ const contadorEstados = computed(() => {
     );
   }
 
-  // Contar por estado
+  // Contar vehículos por estado
   vehiculosParaContar.forEach(vehiculo => {
     if (vehiculo.estado_actual === 'operativo') contador.operativo++;
     if (vehiculo.estado_actual === 'reparacion') contador.reparacion++;
-    if (vehiculo.estado_actual === 'fuera_servicio') contador.inactivo++;
   });
+
+  // Contar solicitudes
+  contador.solicitadas = solicitudesFiltradas.value.length || todasLasSolicitudes.value.length;
 
   return contador;
 });
 
-// MÉTODOS - SOLO UNA CONSULTA INICIAL
+// Nuevo método para cargar solicitudes
+const cargarSolicitudes = async () => {
+  try {
+    const { data, error: sbError } = await supabase
+      .from('orden_compra')
+      .select(`
+        *,
+        refaccion:refaccion_id(
+          id,
+          nombre,
+          descripcion
+        ),
+        proveedor:proveedor_id(
+          id,
+          nombre
+        )
+      `)
+      .eq('estado', 'revision')
+      .order('fecha_creacion', { ascending: false });
+
+    if (sbError) throw sbError;
+
+    // Procesar cada solicitud para obtener información del vehículo relacionado
+    const solicitudesConDatos = await Promise.all(
+      data.map(async (solicitud) => {
+        let vehiculoInfo = null;
+
+        // Buscar vehículo relacionado a través de reparaciones
+        if (solicitud.refaccion?.id) {
+          const { data: reparacionData } = await supabase
+            .from('reparacion_refaccion')
+            .select(`
+              reparacion:reparacion_id(
+                vehiculo:vehiculo_id(
+                  id,
+                  marca,
+                  modelo,
+                  placa
+                )
+              )
+            `)
+            .eq('refaccion_id', solicitud.refaccion.id)
+            .limit(1);
+
+          if (reparacionData && reparacionData.length > 0 && reparacionData[0].reparacion?.vehiculo) {
+            const vehiculo = reparacionData[0].reparacion.vehiculo;
+            vehiculoInfo = `${vehiculo.marca} ${vehiculo.modelo} - ${vehiculo.placa}`;
+          }
+        }
+
+        return {
+          ...solicitud,
+          refaccion_nombre: solicitud.refaccion?.nombre || 'Refacción desconocida',
+          proveedor_nombre: solicitud.proveedor?.nombre || null,
+          vehiculo_info: vehiculoInfo
+        };
+      })
+    );
+
+    todasLasSolicitudes.value = solicitudesConDatos;
+    console.log(`✅ Solicitudes cargadas: ${todasLasSolicitudes.value.length} registros`);
+
+  } catch (err) {
+    console.error('Error al cargar solicitudes:', err);
+  }
+};
+
+// MÉTODO MODIFICADO - CON IMÁGENES DESDE EVIDENCIA
 const cargarVehiculos = async () => {
   try {
     loading.value = true;
     error.value = null;
 
-    // UNA SOLA CONSULTA - Cargar todos los vehículos una vez
-    const { data, error: sbError } = await supabase
-      .from('vehiculo')
-      .select('*')
-      .order('id', { ascending: true });
-
-    if (sbError) throw sbError;
-
-    // Guardar en el array principal
-    todosLosVehiculos.value = data;
-    console.log(`✅ Vehículos cargados: ${data.length} registros`);
+    // Cargar vehículos y solicitudes en paralelo
+    await Promise.all([
+      cargarDatosVehiculos(),
+      cargarSolicitudes()
+    ]);
 
   } catch (err) {
-    console.error('Error al cargar vehículos:', err);
-    error.value = 'Error al cargar los vehículos. Por favor, intenta nuevamente.';
+    console.error('Error al cargar datos:', err);
+    error.value = 'Error al cargar los datos. Por favor, intenta nuevamente.';
   } finally {
     loading.value = false;
   }
 };
 
-// ELIMINAR buscarVehiculos() y debounceSearch() - Ya no necesarios
-// Todo el filtrado se hace en computed properties
+const cargarDatosVehiculos = async () => {
+  // Consulta original para vehículos
+  const { data, error: sbError } = await supabase
+    .from('vehiculo')
+    .select(`
+      *,
+      reparaciones:reparacion(
+        id,
+        refacciones:reparacion_refaccion(
+          refaccion:refaccion_id(
+            id,
+            precio_unitario,
+            nombre
+          )
+        ),
+        evidencias:evidencia(
+          id,
+          tipo,
+          url_archivo
+        )
+      )
+    `)
+    .order('id', { ascending: true });
+
+  if (sbError) throw sbError;
+
+  // Procesar cada vehículo (lógica original)
+  const vehiculosConDatos = await Promise.all(
+    data.map(async (vehiculo) => {
+      let costoTotal = 0;
+      let tieneSolicitadas = false;
+      let imagenVehiculo = null;
+
+      if (vehiculo.reparaciones) {
+        for (const reparacion of vehiculo.reparaciones) {
+          if (reparacion.evidencias) {
+            const evidenciasConImagen = reparacion.evidencias.filter(evidencia =>
+              evidencia.tipo === 'imagen' && evidencia.url_archivo
+            );
+            if (evidenciasConImagen.length > 0) {
+              imagenVehiculo = evidenciasConImagen[0].url_archivo;
+            }
+          }
+
+          if (reparacion.refacciones) {
+            for (const item of reparacion.refacciones) {
+              const precio = item.refaccion?.precio_unitario || 0;
+              const cantidad = 1;
+              costoTotal += precio * cantidad;
+
+              if (item.refaccion?.id) {
+                const { data: ordenes } = await supabase
+                  .from('orden_compra')
+                  .select('estado')
+                  .eq('refaccion_id', item.refaccion.id)
+                  .eq('estado', 'revision');
+
+                if (ordenes && ordenes.length > 0) {
+                  tieneSolicitadas = true;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        ...vehiculo,
+        costoTotal,
+        tieneSolicitadas,
+        imagen: imagenVehiculo || vehiculo.imagen
+      };
+    })
+  );
+
+  todosLosVehiculos.value = vehiculosConDatos;
+  console.log(`✅ Vehículos cargados: ${todosLosVehiculos.value.length} registros`);
+};
 
 const cambiarFiltro = (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
@@ -194,17 +412,45 @@ const verDetalleVehiculo = (id) => {
   router.push({ name: 'DTCONECT', params: { id } })
 }
 
-// Funciones de utilidad - Sin cambios
+const verDetalleSolicitud = (id) => {
+  // Aquí puedes implementar la navegación al detalle de la solicitud
+  console.log(`Ver detalle de solicitud: ${id}`);
+  // router.push({ name: 'DetalleSolicitud', params: { id } })
+}
+
+// Función para calcular tiempo transcurrido
+const calcularTiempoTranscurrido = (fecha) => {
+  if (!fecha) return 'Fecha no disponible';
+
+  const ahora = new Date();
+  const fechaSolicitud = new Date(fecha);
+  const diferenciaMilisegundos = ahora - fechaSolicitud;
+  const diasTranscurridos = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
+
+  if (diasTranscurridos === 0) return 'Hoy';
+  if (diasTranscurridos === 1) return 'Hace 1 día';
+  if (diasTranscurridos < 7) return `Hace ${diasTranscurridos} días`;
+  if (diasTranscurridos < 30) {
+    const semanas = Math.floor(diasTranscurridos / 7);
+    return semanas === 1 ? 'Hace 1 semana' : `Hace ${semanas} semanas`;
+  }
+
+  const meses = Math.floor(diasTranscurridos / 30);
+  return meses === 1 ? 'Hace 1 mes' : `Hace ${meses} meses`;
+};
+
+// Funciones de utilidad (las originales)
 const getEstadoClass = (estado) => {
   const clases = {
     'operativo': 'operativo',
     'reparacion': 'reparacion',
-    'fuera_servicio': 'fuera-servicio'
+    'solicitadas': 'solicitadas'
   };
   return clases[estado] || '';
 };
 
 const formatearCosto = (costo) => {
+  if (!costo || costo === 0) return '$ 0';
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
@@ -246,7 +492,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Mismo CSS - sin cambios */
+/* Estilos originales */
 .loading-container, .error-container {
   display: flex;
   flex-direction: column;
@@ -292,6 +538,7 @@ onMounted(() => {
   background-color: #2980b9;
 }
 
+/* Estilos para vehículos (originales) */
 .vehiculos-lista {
   width: 100%;
   display: flex;
@@ -359,6 +606,145 @@ onMounted(() => {
   border: 1px solid rgb(59, 81, 105);
 }
 
+.costo-pendiente {
+  background-color: #e74c3c !important;
+}
+
+/* NUEVOS ESTILOS PARA SOLICITUDES */
+.solicitudes-lista {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.solicitud-card {
+  width: 85%;
+  background-color: #2c3e50;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 4px solid #9C27B0;
+  position: relative;
+}
+
+.solicitud-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.solicitud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.icono-refaccion {
+  background-color: #9C27B0;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.badge-revision {
+  background-color: #9C27B0;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.contenido-solicitud {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-principal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nombre-refaccion {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.vehiculo-relacionado {
+  color: #bdc3c7;
+  font-size: 12px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vehiculo-relacionado i {
+  color: #9C27B0;
+}
+
+.info-secundaria {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proveedor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ecf0f1;
+  font-size: 11px;
+}
+
+.proveedor-info i {
+  color: #9C27B0;
+  width: 12px;
+}
+
+.fecha-costo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fecha-solicitud {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #95a5a6;
+  font-size: 10px;
+}
+
+.fecha-solicitud i {
+  color: #9C27B0;
+}
+
+.costo-total {
+  background-color: #9C27B0;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* Estilos originales restantes */
 .vehiculos-view {
   width: 345px;
   height: 650px;
@@ -399,30 +785,8 @@ onMounted(() => {
   border-left: 4px solid #FFC107;
 }
 
-.fuera-servicio {
-  border-left: 4px solid #9E9E9E;
-}
-
-.estado-label {
-  color: white;
-  padding: 3px 10px;
-  border-radius: 15px;
-  font-size: 12px;
-  display: inline-block;
-  margin-bottom: 5px;
-}
-
-.estado-operativo {
-  background-color: #4CAF50;
-}
-
-.estado-reparacion {
-  background-color: #FFC107;
-  color: #333;
-}
-
-.estado-inactivo {
-  background-color: #9E9E9E;
+.solicitadas {
+  border-left: 4px solid #9C27B0;
 }
 
 .no-resultados {
@@ -528,8 +892,8 @@ onMounted(() => {
   background-color: #FFC107 !important;
 }
 
-.filtro-btn.activo-inactivos {
-  background-color: #9E9E9E !important;
+.filtro-btn.activo-solicitadas {
+  background-color: #9C27B0 !important;
 }
 
 .filtros::-webkit-scrollbar {
@@ -553,7 +917,7 @@ onMounted(() => {
   background-color: #ffb300 !important;
 }
 
-.filtro-btn.activo-inactivos:hover {
-  background-color: #757575 !important;
+.filtro-btn.activo-solicitadas:hover {
+  background-color: #7B1FA2 !important;
 }
 </style>
