@@ -64,7 +64,7 @@
 }
 
 .icon-link.active {
-  background-color: #4a5568; /* Color gris para el estado activo */
+  background-color: #3d4044bd; /* Color gris para el estado activo */
 }
 
 .icon {
