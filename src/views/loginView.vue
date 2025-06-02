@@ -124,6 +124,11 @@ const handleLogin = async () => {
     showpopup.value = true
     console.log('Login exitoso:', data)
 
+
+   // Guardar el usuario logueado en localStorage
+   localStorage.setItem('usuario', JSON.stringify(data))
+
+
    // Esperar 1.5 segundos y redirigir
     setTimeout(() => {
       router.push('/usuario') // o usa { name: 'Dashboard' } si usas nombres en el router
