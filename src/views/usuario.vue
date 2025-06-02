@@ -15,12 +15,12 @@
     </div>
     <div class="input-container">
       <p class="tx1">Name</p>
-      <input type="text" placeholder=""/>
+      <input type="text" :placeholder="nombreUsuario" />
     </div>
 
     <div class="input-container">
     <p class="tx">Password</p>
-    <input type="password" placeholder="" />
+    <input type="password" placeholder="*******" />
     </div>
     <button class="btnSave">Save changes</button>
   </div>  
