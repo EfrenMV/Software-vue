@@ -44,8 +44,6 @@ component: () => import('@/views/MenuNerudo.vue'),
   component: () => import('@/views/DetalleVehiculoView.vue')
 }
 
-
-
  ]
 
 const router = createRouter({

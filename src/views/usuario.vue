@@ -9,18 +9,18 @@
       </div>
         <div class="box_img">
         <img src="../components/icons/userProfile.png" alt="perfil" />
-        <p style="color: aliceblue;">Juan Mecanico</p>
+        <p style="color: aliceblue;">{{ nombreUsuario }}</p>
       </div>
 
     </div>
     <div class="input-container">
       <p class="tx1">Name</p>
-      <input type="text" placeholder=""/>
+      <input type="text" :placeholder="nombreUsuario" />
     </div>
 
     <div class="input-container">
     <p class="tx">Password</p>
-    <input type="password" placeholder="" />
+    <input type="password" placeholder="*******" />
     </div>
     <button class="btnSave">Save changes</button>
   </div>  
@@ -30,12 +30,24 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import Menu from '@/components/Menu.vue'
 import Header from '@/components/Header.vue'
 
+const nombreUsuario = ref('')
+
+onMounted(() => {
+  const usuario = JSON.parse(localStorage.getItem('usuario'))
+  if (usuario && usuario.nombre_usuario) {
+    nombreUsuario.value = usuario.nombre_usuario
+  } else {
+    nombreUsuario.value = 'Usuario'
+  }
+})
 </script>
 
 <style setup>
+/* ... tu CSS sin cambios ... */
 .usuario{
     width: 345px;
     height: 6500px;
@@ -148,8 +160,4 @@ import Header from '@/components/Header.vue'
    font-weight: bold;
 
   }
-
-
- 
-
 </style>
