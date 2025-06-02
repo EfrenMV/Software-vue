@@ -1,78 +1,40 @@
-<!-- Detalles vehiculo borrador malo -->
 <template>
   <div class="detalle-vehiculo">
+    <!-- Header -->
     <Header />
 
-    <div class="contenido-scrollable" v-if="vehiculo">
-      <!-- Fecha dinámica -->
+    <!-- Contenido principal con scroll -->
+    <div class="contenido-scrollable">
+      <!-- Fecha de última reparación -->
       <div class="fecha-reparacion">
-        Últ reparación: <strong>{{ fechaFormateada || 'N/A' }}</strong>
+        Últ reparación: <strong>14/11/2024</strong>
       </div>
 
-      <!-- Estado dinámico -->
-      <div
-        class="estado-badge"
-        :class="statusReparacion"
-        :style="{ backgroundColor: estadoInfo[statusReparacion]?.fondo }"
-      >
-        <span
-          class="circulo"
-          :style="{ backgroundColor: estadoInfo[statusReparacion]?.color }"
-        ></span>
-        {{ estadoInfo[statusReparacion]?.texto || statusReparacion }}
+      <!-- Estado del vehículo -->
+      <div class="estado-badge operativo">
+        <span class="circulo-verde"></span> Operativo
       </div>
 
       <div class="imagen-vehiculo">
-        <img
-          :src="imagenUrl"
-          :alt="vehiculo.modelo"
-          class="imagen"
-          width="70%"
-          @error="handleImageError"
-        >
+        <img src="/img/vehiculos/claseG.png" alt="Mercedes Clase G" class="imagen" width="70%">
       </div>
 
-      <!-- Información dinámica -->
+      <!-- Información del vehículo -->
       <div class="info-vehiculo">
-        <h2>{{ vehiculo.modelo }}</h2>
-        <h3>Placa <strong>{{ vehiculo.placa }}</strong></h3>
+        <h2>Mercedes Clase G</h2>
+        <h3>Placa <strong>GE-736865</strong></h3>
       </div>
 
+      <!-- Descripción -->
       <div class="descripcion">
-        <p>{{ descripcion || 'Sin descripción disponible' }}</p>
-      </div>
-
-      <!-- Detalles adicionales -->
-      <div class="detalles-adicionales">
-        <div class="detalle-item">
-          <span class="detalle-label">Mecánico:</span>
-          <span class="detalle-valor">{{ mecanicoNombre || 'No asignado' }}</span>
-        </div>
-        <div class="detalle-item">
-          <span class="detalle-label">Horómetro:</span>
-          <span class="detalle-valor">{{ reparacion.horometro || 'N/A' }}</span>
-        </div>
-        <div class="detalle-item">
-          <span class="detalle-label">Odómetro:</span>
-          <span class="detalle-valor">{{ reparacion.odometro || 'N/A' }}</span>
-        </div>
-        <div class="detalle-item">
-          <span class="detalle-label">Próximo servicio:</span>
-          <span class="detalle-valor">{{ proximoServicioFormateado || 'N/A' }}</span>
-        </div>
+        <p>
+          Se reemplazó el sistema de frenos ABS tras detectar una pérdida de presión en la línea principal. También se
+          realizó un escaneo completo de errores y limpieza de sensores electrónicos.
+        </p>
       </div>
     </div>
 
-    <!-- Mensajes de estado -->
-    <div v-if="cargando" class="mensaje-estado">
-      <p>Cargando información del vehículo...</p>
-    </div>
-
-    <div v-if="error" class="mensaje-estado error">
-      <p>Error al cargar el vehículo: {{ error }}</p>
-      <button @click="cargarDatosVehiculo">Reintentar</button>
-    </div>
-
+    <!-- Menú inferior fijo (ajustado más arriba) -->
     <div class="menu-fijo">
       <Menu />
     </div>
@@ -80,140 +42,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import Header from '@/components/Header.vue'
-import Menu from '@/components/Menu.vue'
-import { supabase } from '@/supabase'
+import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
+import Header from '@/components/Header.vue';
+import Menu from '@/components/Menu.vue';
 
-const route = useRoute()
-const placa = route.params.placa
-const vehiculo = ref(null)
-const reparacion = ref({})
-const mecanico = ref(null)
-const cargando = ref(true)
-const error = ref(null)
-
-// Configuración de estados
-const estadoInfo = {
-  completado: {
-    texto: 'Operativo',
-    color: '#4CAF50',
-    fondo: '#a7d782'
-  },
-  en_progreso: {
-    texto: 'En reparación',
-    color: '#FF9800',
-    fondo: '#ffcc80'
-  },
-  pendiente: {
-    texto: 'Pendiente',
-    color: '#F44336',
-    fondo: '#e57373'
-  },
-  cancelado: {
-    texto: 'Cancelado',
-    color: '#9E9E9E',
-    fondo: '#eeeeee'
-  }
-}
-
-// Computed properties
-const statusReparacion = computed(() => {
-  return reparacion.value.status || 'pendiente'
-})
-
-const fechaFormateada = computed(() => {
-  if (reparacion.value.fecha) {
-    const fecha = new Date(reparacion.value.fecha)
-    return fecha.toLocaleDateString('es-ES')
-  }
-  return null
-})
-
-const proximoServicioFormateado = computed(() => {
-  if (reparacion.value.proximo_servicio) {
-    const fecha = new Date(reparacion.value.proximo_servicio)
-    return fecha.toLocaleDateString('es-ES')
-  }
-  return null
-})
-
-const imagenUrl = computed(() => {
-  return vehiculo.value?.imagen_url || '/img/vehiculos/default.png'
-})
-
-const descripcion = computed(() => {
-  return reparacion.value?.diagnostico ||
-         reparacion.value?.procedimiento ||
-         vehiculo.value?.descripcion ||
-         'Sin descripción disponible'
-})
-
-const mecanicoNombre = computed(() => {
-  return mecanico.value?.nombre_completo || mecanico.value?.nombre || 'Mecánico no asignado'
-})
-
-// Manejar errores de imagen
-const handleImageError = (event) => {
-  event.target.src = '/img/vehiculos/default.png'
-}
-
-// Obtener datos del vehículo y reparación
-const cargarDatosVehiculo = async () => {
-  try {
-    cargando.value = true
-    error.value = null
-
-    // Paso 1: Obtener vehículo por placa
-    const { data: vehiculoData, error: vehiculoError } = await supabase
-      .from('vehiculo')
-      .select('*')
-      .eq('placa', placa)
-      .single()
-
-    if (vehiculoError) throw vehiculoError
-    if (!vehiculoData) throw new Error('Vehículo no encontrado')
-
-    vehiculo.value = vehiculoData
-
-    // Paso 2: Obtener última reparación del vehículo
-    const { data: reparacionData, error: reparacionError } = await supabase
-      .from('reparacion')
-      .select('*')
-      .eq('vehiculo_id', vehiculo.value.id)
-      .order('fecha', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (reparacionError) {
-      console.warn('No se encontró reparación para el vehículo:', reparacionError.message)
-    } else {
-      reparacion.value = reparacionData || {}
-
-      // Paso 3: Si hay reparación, obtener mecánico asignado
-      if (reparacionData?.mecanico_id) {
-        const { data: mecanicoData, error: mecanicoError } = await supabase
-          .from('usuario')
-          .select('id, nombre, apellido, nombre_completo')
-          .eq('id', reparacionData.mecanico_id)
-          .single()
-
-        if (!mecanicoError && mecanicoData) {
-          mecanico.value = mecanicoData
-        }
-      }
-    }
-
-  } catch (err) {
-    console.error('Error al cargar vehículo:', err)
-    error.value = err.message || 'Error desconocido'
-  } finally {
-    cargando.value = false
-  }
-}
-
-onMounted(cargarDatosVehiculo)
+const router = useRouter();
+const route = useRoute();
+const placaVehiculo = route.params.placa;
 </script>
 
 <style scoped>
@@ -267,12 +103,17 @@ onMounted(cargarDatosVehiculo)
   font-size: 14px;
   font-weight: bold;
   margin-bottom: 20px;
-  margin-left: auto;
+    margin-left: auto;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   width: fit-content;
-  color: #333;
+}
+
+.estado-badge.operativo {
+  background-color: #a7d782;
+   font-family: 'Roboto', sans-serif;
+  color: #ffffff;
 }
 
 .info-vehiculo {
@@ -297,35 +138,13 @@ onMounted(cargarDatosVehiculo)
   background-color: #f5f5f5;
   padding: 15px;
   border-radius: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .descripcion p {
   margin: 0;
   color: #333;
   line-height: 1.5;
-}
-
-.detalles-adicionales {
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-
-.detalle-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.detalle-label {
-  font-weight: bold;
-  color: #666;
-}
-
-.detalle-valor {
-  color: #333;
 }
 
 .imagen-vehiculo {
@@ -350,36 +169,13 @@ onMounted(cargarDatosVehiculo)
   }
 }
 
-.circulo {
+.circulo-verde {
   display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-right: 8px;
-}
-
-.mensaje-estado {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.mensaje-estado.error {
-  color: #f44336;
-}
-
-.mensaje-estado button {
-  margin-top: 15px;
-  padding: 8px 16px;
   background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 </style>
