@@ -1,4 +1,3 @@
-<!-- MenuNerudo "final" -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -71,21 +70,25 @@
             @click="verDetalleVehiculo(vehiculo.id)"
           >
             <div class="contenido-vehiculo">
-              <div class="imagen-container">
+              <div class="imagen-costo-container">
                 <img
                   class="imagen-vehiculo"
                   :src="vehiculo.imagen || '/img/vehiculos/default.png'"
                   :alt="vehiculo.nombre"
                   @error="handleImageError"
                 >
+                <div class="costo-vehiculo">
+                  <span class="costo-label">{{ formatearCosto(vehiculo.costo) }}</span>
+                </div>
               </div>
               <div class="texto-vehiculo">
+                <div class="estado-label" :class="getEstadoLabelClass(vehiculo.estado)">
+                  {{ getEstadoLabel(vehiculo.estado) }}
+                </div>
                 <h3 v-html="resaltarTexto(vehiculo.nombre)"></h3>
                 <p><strong>Placa {{ vehiculo.placa }}</strong></p>
                 <p>Últ. Reparación: {{ formatearFecha(vehiculo.fecha_ultima_reparacion) }}</p>
-              </div>
-              <div class="costo-vehiculo">
-                <span class="costo-label">{{ formatearCosto(vehiculo.costo) }}</span>
+                <p>Mecánico: {{ vehiculo.mecanico || 'No asignado' }}</p>
               </div>
             </div>
           </div>
@@ -219,7 +222,7 @@ const cargarVehiculos = async () => {
     loading.value = true;
     error.value = null;
 
-    // Reemplazar con llamada real al backend
+    // TODO: Reemplazar con llamada real al backend
     // const response = await vehiculosService.obtenerTodos();
     // vehiculos.value = response.data;
 
@@ -241,7 +244,7 @@ const buscarVehiculos = async (termino) => {
   try {
     loading.value = true;
 
-    // Implementar búsqueda en backend
+    // TODO: Implementar búsqueda en backend
     // const response = await vehiculosService.buscar({
     //   termino: termino,
     //   estado: filtroActivo.value
@@ -268,11 +271,12 @@ const debounceSearch = () => {
 const cambiarFiltro = async (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
 
-  // filtrar en backend, descomenta:
+  // TODO: Si quieres filtrar en backend, descomenta:
   // await cargarVehiculos();
 };
 
 const verDetalleVehiculo = (id) => {
+  // TODO: Navegar a detalle del vehículo
   console.log('Ver detalle del vehículo:', id);
   // router.push(`/vehiculos/${id}`);
 };
@@ -431,7 +435,7 @@ watch(filtroActivo, (nuevoFiltro) => {
   position: relative;
 }
 
-.imagen-container {
+.imagen-costo-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -442,22 +446,23 @@ watch(filtroActivo, (nuevoFiltro) => {
   height: 3rem;
   object-fit: cover;
   border-radius: 8px;
+  margin-bottom: 5px;
 }
 
 .texto-vehiculo {
   flex: 1;
-  min-width: 0;
+  min-width: 0; /* Permite que el texto se ajuste sin expandir el contenedor */
 }
 
 .costo-vehiculo {
   display: flex;
-  align-items: center;
-  flex-shrink: 0;
+  justify-content: center;
+  width: 100%;
 }
 
 .costo-label {
-  background-color: rgb(19, 154, 124);
-  color: rgb(255, 255, 255);
+  background-color: rgb(59, 81, 105); /* Azul más claro que el fondo pero no tan claro */
+  color: white;
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 10px;
@@ -466,6 +471,7 @@ watch(filtroActivo, (nuevoFiltro) => {
   border: 1px solid rgb(59, 81, 105);
 }
 
+/* Resto de estilos existentes */
 .vehiculos-view {
   width: 345px;
   height: 650px;
