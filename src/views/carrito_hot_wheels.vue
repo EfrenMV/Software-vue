@@ -93,9 +93,11 @@
     </div>
 
     <!-- Botón flotante de gráficas -->
-    <button class="boton-flotante" @click="abrirGraficas">
-      <i class="fas fa-chart-line"></i>
+   <RouterLink to="/graficas">
+    <button class="boton-flotante">
+    <i class="fas fa-chart-line"></i>
     </button>
+    </RouterLink>
 
     <Menu></Menu>
   </div>
