@@ -3,6 +3,7 @@
   <div class="ejemploMenu">
   <div class="box">
 
+    
    <div class="box_img">
         <p style="color: black;">Graficas</p>
         <img src="../components/icons/vehiculo.png" alt="perfil" />
