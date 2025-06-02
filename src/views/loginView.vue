@@ -73,13 +73,6 @@
 
         </div>
 
-        <!-- Botones del popup -->
-        <div class="popup-footer">
-          <button class="btn-secondary" @click="closepopup">Cerrar</button>
-          <button v-if="isFormValid" class="btn-primary" @click="continuar">Continuar</button>
-        </div>
-
-
       </div>
     </div>
   </div>
