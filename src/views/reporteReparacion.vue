@@ -19,7 +19,7 @@
       <!-- Encabezado -->
       <div class="encabezado">
         <div class="titulo-estado">
-          <h2>{{ vehiculo.modelo }} {{ vehiculo.año }}</h2>
+          <h2>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h2>
           <span class="etiqueta-estado" :class="getEstadoClass(vehiculo.estado_actual)">
             {{ getEstadoLabel(vehiculo.estado_actual) }}
           </span>
@@ -39,10 +39,12 @@
       <div class="reporte">
         <h3>Reporte de Reparación</h3>
         <div class="detalle-reparacion">
+          <p><strong>Tipo:</strong> {{ reparacion.tipo }}</p>
           <p><strong>Diagnóstico:</strong> {{ reparacion.diagnostico }}</p>
           <p><strong>Procedimiento:</strong> {{ reparacion.procedimiento }}</p>
           <p><strong>Notas:</strong> {{ reparacion.notas || 'Sin notas adicionales' }}</p>
-          <p><strong>Kilometraje:</strong> {{ reparacion.kilometraje }} km</p>
+          <p><strong>Odómetro:</strong> {{ reparacion.odometro }} km</p>
+          <p><strong>Horómetro:</strong> {{ reparacion.horometro }} hrs</p>
         </div>
       </div>
 
@@ -132,7 +134,7 @@ const cargarDatos = async () => {
 
     const reparacionId = route.params.id // Obtener ID de la URL
 
-    // CONSULTA REAL A LA BASE DE DATOS
+    //  CONSULTA REAL A LA BASE DE DATOS
     const { data: reparacionData, error: reparacionError } = await supabase
       .from('reparacion')
       .select(`
