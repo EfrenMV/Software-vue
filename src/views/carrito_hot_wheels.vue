@@ -1,4 +1,4 @@
- <!-- Carrito hot wheels "terminado" -->
+<!-- MenuNerudo conectado con formato de ficha -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -32,22 +32,22 @@
           <div class="filtros">
             <button
               class="filtro-btn"
-              :class="{ 'activo-operativo': filtroActivo === 'OPERATIVO' }"
-              @click="cambiarFiltro('OPERATIVO')"
+              :class="{ 'activo-operativo': filtroActivo === 'operativo' }"
+              @click="cambiarFiltro('operativo')"
             >
               Operativos ({{ contadorEstados.operativo }})
             </button>
             <button
               class="filtro-btn"
-              :class="{ 'activo-reparacion': filtroActivo === 'REPARACION' }"
-              @click="cambiarFiltro('REPARACION')"
+              :class="{ 'activo-reparacion': filtroActivo === 'reparacion' }"
+              @click="cambiarFiltro('reparacion')"
             >
               Reparación ({{ contadorEstados.reparacion }})
             </button>
             <button
               class="filtro-btn"
-              :class="{ 'activo-inactivos': filtroActivo === 'INACTIVO' }"
-              @click="cambiarFiltro('INACTIVO')"
+              :class="{ 'activo-inactivos': filtroActivo === 'fuera_servicio' }"
+              @click="cambiarFiltro('fuera_servicio')"
             >
               Inactivos ({{ contadorEstados.inactivo }})
             </button>
@@ -61,31 +61,32 @@
           <small>Intenta con otro término de búsqueda o cambia el filtro</small>
         </div>
 
-        <!-- Lista de Vehículos - Modificado a grid de 2 columnas -->
+        <!-- Lista de Vehículos - Grid de 2 columnas como el primer código -->
         <div class="vehiculos-lista">
           <div
             v-for="vehiculo in vehiculosFiltrados"
             :key="vehiculo.id"
             class="vehiculo-card"
-            :class="getEstadoClass(vehiculo.estado)"
+            :class="getEstadoClass(vehiculo.estado_actual)"
             @click="verDetalleVehiculo(vehiculo.id)"
           >
             <div class="contenido-vehiculo">
+              <!-- Estructura como el primer código: estado arriba, imagen, texto abajo -->
               <div class="imagen-container">
-                <div class="estado-label" :class="getEstadoLabelClass(vehiculo.estado)">
-                  {{ getEstadoLabel(vehiculo.estado) }}
+                <div class="estado-label" :class="getEstadoLabelClass(vehiculo.estado_actual)">
+                  {{ getEstadoLabel(vehiculo.estado_actual) }}
                 </div>
                 <img
                   class="imagen-vehiculo"
                   :src="vehiculo.imagen || '/img/vehiculos/default.png'"
-                  :alt="vehiculo.nombre"
+                  :alt="vehiculo.marca + ' ' + vehiculo.modelo"
                   @error="handleImageError"
                 >
               </div>
               <div class="texto-vehiculo">
-                <h3 v-html="resaltarTexto(vehiculo.nombre)"></h3>
+                <h3 v-html="resaltarTexto(vehiculo.marca + ' ' + vehiculo.modelo)"></h3>
                 <p><strong>Placa {{ vehiculo.placa }}</strong></p>
-                <p>Últ. Reparación: {{ formatearFecha(vehiculo.fecha_ultima_reparacion) }}</p>
+                <p>Últ. Reparación: {{ formatearFecha(vehiculo.ultima_reparacion) }}</p>
               </div>
             </div>
           </div>
@@ -97,119 +98,52 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Menu from '@/components/Menu.vue';
 import Header from '@/components/Header.vue';
-// import { vehiculosService } from '@/services/vehiculosService'; // Descomentar cuando esté disponible
+import { supabase } from '@/supabase';
 
 // Estado reactivo
-const vehiculos = ref([]);
-const filtroActivo = ref('OPERATIVO');
+const todosLosVehiculos = ref([]); // Array completo para contadores
+const vehiculos = ref([]); // Array que se muestra (puede estar filtrado por búsqueda)
+const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
 const error = ref(null);
 const searchTimeout = ref(null);
 
-// MOCK DATA - Remover cuando se integre el backend
-const mockVehiculos = [
-  {
-    id: 1,
-    nombre: "BMW Z4 coupe",
-    placa: "M-QB-1180",
-    fecha_ultima_reparacion: "2023-02-16",
-    imagen: "/img/vehiculos/z4.png",
-    estado: "OPERATIVO",
-    costo: 45000,
-    mecanico: "Juan Pérez"
-  },
-  {
-    id: 2,
-    nombre: "Mercedez CLE coupe",
-    placa: "S-CL-2362",
-    fecha_ultima_reparacion: "2022-06-15",
-    imagen: "/img/vehiculos/CLE_coupe.png",
-    estado: "OPERATIVO",
-    costo: 75000,
-    mecanico: "Ana García"
-  },
-  {
-    id: 3,
-    nombre: "Nissan Sedan Azul",
-    placa: "PFX-266",
-    fecha_ultima_reparacion: "2024-03-27",
-    imagen: "/img/vehiculos/onix.png",
-    estado: "OPERATIVO",
-    costo: 28000,
-    mecanico: "Luis Rodriguez"
-  },
-  {
-    id: 4,
-    nombre: "BMW Serie 1 Azul",
-    placa: "MWY-666",
-    fecha_ultima_reparacion: "2024-04-02",
-    imagen: "/img/vehiculos/bmw.png",
-    estado: "REPARACION",
-    costo: 52000,
-    mecanico: "Carlos Mendoza"
-  },
-  {
-    id: 5,
-    nombre: "Mercedez clase G",
-    placa: "GE-736-865",
-    fecha_ultima_reparacion: "2024-03-27",
-    imagen: "/img/vehiculos/clase_g.png",
-    estado: "INACTIVO",
-    costo: 120000,
-    mecanico: "María López"
-  },
-  {
-    id: 6,
-    nombre: "Ford Mustang",
-    placa: "MNN-777",
-    fecha_ultima_reparacion: "2024-03-27",
-    imagen: "/img/vehiculos/mustang.png",
-    estado: "INACTIVO",
-    costo: 65000,
-    mecanico: "Pedro Jiménez"
-  }
-];
-
 // Computed properties
 const vehiculosFiltrados = computed(() => {
-  let resultado = vehiculos.value;
+  // Filtrar por estado desde vehiculos (que ya puede estar filtrado por búsqueda)
+  return vehiculos.value.filter(vehiculo =>
+    vehiculo.estado_actual === filtroActivo.value
+  );
+});
 
-  // Filtrar por término de búsqueda
+const contadorEstados = computed(() => {
+  const contador = {
+    operativo: 0,
+    reparacion: 0,
+    inactivo: 0
+  };
+
+  // Usar todosLosVehiculos para contar, pero aplicar filtro de búsqueda si existe
+  let vehiculosParaContar = todosLosVehiculos.value;
+
   if (terminoBusqueda.value.trim()) {
     const termino = terminoBusqueda.value.toLowerCase().trim();
-    resultado = resultado.filter(vehiculo =>
-      vehiculo.nombre.toLowerCase().includes(termino) ||
+    vehiculosParaContar = vehiculosParaContar.filter(vehiculo =>
+      (vehiculo.marca + ' ' + vehiculo.modelo).toLowerCase().includes(termino) ||
       vehiculo.placa.toLowerCase().includes(termino)
     );
   }
 
-  // Filtrar por estado
-  resultado = resultado.filter(vehiculo =>
-    vehiculo.estado === filtroActivo.value
-  );
-
-  return resultado;
-});
-
-const contadorEstados = computed(() => {
-  const contador = { operativo: 0, reparacion: 0, inactivo: 0 };
-  vehiculos.value.forEach(vehiculo => {
-    switch (vehiculo.estado) {
-      case 'OPERATIVO':
-        contador.operativo++;
-        break;
-      case 'REPARACION':
-        contador.reparacion++;
-        break;
-      case 'INACTIVO':
-        contador.inactivo++;
-        break;
-    }
+  vehiculosParaContar.forEach(vehiculo => {
+    if (vehiculo.estado_actual === 'operativo') contador.operativo++;
+    if (vehiculo.estado_actual === 'reparacion') contador.reparacion++;
+    if (vehiculo.estado_actual === 'fuera_servicio') contador.inactivo++;
   });
+
   return contador;
 });
 
@@ -219,13 +153,17 @@ const cargarVehiculos = async () => {
     loading.value = true;
     error.value = null;
 
-    // TODO: Reemplazar con llamada real al backend
-    // const response = await vehiculosService.obtenerTodos();
-    // vehiculos.value = response.data;
+    // Consulta a Supabase - cargar todos los vehículos
+    const { data, error: sbError } = await supabase
+      .from('vehiculo')
+      .select('*')
+      .order('id', { ascending: true });
 
-    // Simulando llamada async con mock data
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    vehiculos.value = mockVehiculos;
+    if (sbError) throw sbError;
+
+    // Guardar en ambos arrays
+    todosLosVehiculos.value = data; // Para contadores
+    vehiculos.value = data; // Para mostrar
 
   } catch (err) {
     console.error('Error al cargar vehículos:', err);
@@ -235,21 +173,25 @@ const cargarVehiculos = async () => {
   }
 };
 
-const buscarVehiculos = async (termino) => {
-  if (!termino.trim()) return;
-
+const buscarVehiculos = async () => {
   try {
     loading.value = true;
 
-    // TODO: Implementar búsqueda en backend
-    // const response = await vehiculosService.buscar({
-    //   termino: termino,
-    //   estado: filtroActivo.value
-    // });
-    // vehiculos.value = response.data;
+    if (terminoBusqueda.value.trim()) {
+      // Si hay término de búsqueda, filtrar desde la base de datos
+      const { data, error: sbError } = await supabase
+        .from('vehiculo')
+        .select('*')
+        .or(`marca.ilike.%${terminoBusqueda.value}%,modelo.ilike.%${terminoBusqueda.value}%,placa.ilike.%${terminoBusqueda.value}%`)
+        .order('id', { ascending: true });
 
-    // Por ahora, la búsqueda se hace en el frontend con computed
-    console.log('Buscando:', termino);
+      if (sbError) throw sbError;
+
+      vehiculos.value = data; // Solo actualizar vehiculos, no todosLosVehiculos
+    } else {
+      // Si no hay búsqueda, mostrar todos
+      vehiculos.value = todosLosVehiculos.value;
+    }
 
   } catch (err) {
     console.error('Error en búsqueda:', err);
@@ -261,19 +203,17 @@ const buscarVehiculos = async (termino) => {
 const debounceSearch = () => {
   clearTimeout(searchTimeout.value);
   searchTimeout.value = setTimeout(() => {
-    buscarVehiculos(terminoBusqueda.value);
+    buscarVehiculos();
   }, 300);
 };
 
-const cambiarFiltro = async (nuevoFiltro) => {
+const cambiarFiltro = (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-
-  // TODO: Si quieres filtrar en backend, descomenta:
-  // await cargarVehiculos();
+  // No necesitamos llamar buscarVehiculos aquí porque vehiculosFiltrados
+  // ya maneja el filtrado reactivamente
 };
 
 const verDetalleVehiculo = (id) => {
-  // TODO: Navegar a detalle del vehículo
   console.log('Ver detalle del vehículo:', id);
   // router.push(`/vehiculos/${id}`);
 };
@@ -281,34 +221,32 @@ const verDetalleVehiculo = (id) => {
 // Funciones de utilidad
 const getEstadoClass = (estado) => {
   const clases = {
-    'OPERATIVO': 'operativo',
-    'REPARACION': 'reparacion',
-    'INACTIVO': 'fuera-servicio'
+    'operativo': 'operativo',
+    'reparacion': 'reparacion',
+    'fuera_servicio': 'fuera-servicio'
   };
   return clases[estado] || '';
 };
 
 const getEstadoLabel = (estado) => {
   const labels = {
-    'OPERATIVO': 'Operativo',
-    'REPARACION': 'En Reparación',
-    'INACTIVO': 'Fuera de Servicio'
+    'operativo': 'Operativo',
+    'reparacion': 'En Reparación',
+    'fuera_servicio': 'Fuera de Servicio'
   };
   return labels[estado] || estado;
 };
 
 const getEstadoLabelClass = (estado) => {
   const clases = {
-    'OPERATIVO': 'estado-operativo',
-    'REPARACION': 'estado-reparacion',
-    'INACTIVO': 'estado-inactivo'
+    'operativo': 'estado-operativo',
+    'reparacion': 'estado-reparacion',
+    'fuera_servicio': 'estado-inactivo'
   };
   return clases[estado] || '';
 };
 
 const formatearCosto = (costo) => {
-  if (!costo) return '$0';
-
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
@@ -346,11 +284,6 @@ const handleImageError = (event) => {
 // Lifecycle hooks
 onMounted(() => {
   cargarVehiculos();
-});
-
-// Watchers
-watch(filtroActivo, (nuevoFiltro) => {
-  console.log('Filtro cambiado a:', nuevoFiltro);
 });
 </script>
 
@@ -401,7 +334,7 @@ watch(filtroActivo, (nuevoFiltro) => {
   background-color: #2980b9;
 }
 
-/* Lista de vehículos - MODIFICADO */
+/* Lista de vehículos - GRID DE 2 COLUMNAS como el primer código */
 .vehiculos-lista {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -434,7 +367,7 @@ watch(filtroActivo, (nuevoFiltro) => {
   gap: 10px;
 }
 
-/* NUEVO: Contenedor de imagen con etiqueta de estado */
+/* Contenedor de imagen con etiqueta de estado ARRIBA */
 .imagen-container {
   display: flex;
   flex-direction: column;
@@ -450,7 +383,7 @@ watch(filtroActivo, (nuevoFiltro) => {
   border-radius: 8px;
 }
 
-/* MODIFICADO: Etiqueta de estado arriba de la imagen */
+/* Etiqueta de estado arriba de la imagen */
 .estado-label {
   color: white;
   padding: 2px 8px;
@@ -650,7 +583,7 @@ watch(filtroActivo, (nuevoFiltro) => {
   background-color: #757575 !important;
 }
 
-/* Resto de estilos existentes */
+/* Resto de estilos base */
 .vehiculos-view {
   width: 345px;
   height: 650px;
