@@ -42,6 +42,11 @@ component: () => import('@/views/MenuNerudo.vue'),
   path: '/Detallesvehi',
   name: 'VehiculoDetalle',
   component: () => import('@/views/DetalleVehiculoView.vue')
+},
+{
+  path: '/hotwhe',
+  name: 'hotwhe',
+  component: () => import('@/views/carrito_hot_wheels.vue')
 }
 
  ]
