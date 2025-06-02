@@ -18,33 +18,133 @@
     <template v-else>
       <!-- Encabezado -->
       <div class="encabezado">
-        <div class="titulo-estado">
-          <h2>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h2>
-          <span class="etiqueta-estado" :class="getEstadoClass(vehiculo.estado_actual)">
-            {{ getEstadoLabel(vehiculo.estado_actual) }}
+        <div class="titulo-principal">
+          <h2>🛒 Orden de Compra #{{ orden.id }}</h2>
+        </div>
+        
+        <!-- Estatus separado -->
+        <div class="estado-separado">
+          <span class="etiqueta-estado" :class="getEstadoClass(orden.estado)">
+            {{ orden.estado || 'Pendiente' }}
           </span>
         </div>
 
-        <div class="info-auto">
-          <img src="/src/components/icons/bmw.png" alt="auto" class="imagen-auto" />
-          <div class="datos-vehiculo">
-            <p class="nombre">{{ mecanico.nombre }} {{ mecanico.apellido_paterno }}</p>
-            <p class="placa">Placa {{ vehiculo.placa }}</p>
-            <p class="ultima">Últ. Reparación: {{ formatearFecha(reparacion.fecha) }}</p>
+        <!-- Info de la orden -->
+        <div class="info-orden">
+          <div class="orden-header">
+            <h3>💼 Información de la Orden</h3>
+          </div>
+          <div class="datos-orden">
+            <div class="dato-item">
+              <span class="icono">💰</span>
+              <div class="dato-contenido">
+                <p class="label">Costo Total</p>
+                <p class="value precio">${{ orden.costo_total || '0' }}</p>
+              </div>
+            </div>
+            <div class="dato-item">
+              <span class="icono">📅</span>
+              <div class="dato-contenido">
+                <p class="label">Fecha</p>
+                <p class="value">{{ formatearFecha(orden.fecha_creacion) }}</p>
+              </div>
+            </div>
+            <div v-if="orden.observaciones" class="dato-item">
+              <span class="icono">📝</span>
+              <div class="dato-contenido">
+                <p class="label">Observaciones</p>
+                <p class="value">{{ orden.observaciones }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info del vehículo PRINCIPAL -->
+        <div v-if="vehiculo.marca && vehiculo.modelo" class="info-auto">
+          <div class="auto-header">
+            <h3>🚙 Vehículo Asignado</h3>
+          </div>
+          <div class="auto-contenido">
+            <div class="imagen-container">
+              <img :src="getImagenVehiculo(vehiculo.marca)" :alt="vehiculo.marca" class="imagen-auto" />
+            </div>
+            <div class="datos-vehiculo">
+              <p class="vehiculo-nombre">🚗 {{ vehiculo.nombre_completo || (vehiculo.marca + ' ' + vehiculo.modelo) }}</p>
+              <p class="placa-info">🆔 Placa: {{ vehiculo.placa }}</p>
+              <p class="serie-info">🔢 No. Serie: {{ vehiculo.numero_serie }}</p>
+              <p class="estado-info">
+                📊 Estado: 
+                <span class="estado-badge" :class="getEstadoClass(vehiculo.estado_actual)">
+                  {{ getEstadoLabel(vehiculo.estado_actual) }}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje si no hay vehículo -->
+        <div v-else class="info-auto-vacio">
+          <div class="vacio-contenido">
+            <span class="icono-grande">⚠️</span>
+            <p>No se pudo cargar la información del vehículo</p>
+          </div>
+        </div>
+
+        <!-- Info adicional (simplificada) -->
+        <div class="info-adicional">
+          <div class="adicional-header">
+            <h3>📋 Información Adicional</h3>
+          </div>
+          <div class="adicional-contenido">
+            <div class="info-item">
+              <span class="icono">🏢</span>
+              <span>Proveedor: {{ proveedor.nombre }}</span>
+            </div>
+            <div class="info-item">
+              <span class="icono">🔧</span>
+              <span>Refacción: {{ refaccion.nombre }}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Reporte -->
+      <!-- Reporte simplificado -->
       <div class="reporte">
-        <h3>Reporte de Reparación</h3>
+        <div class="reporte-header">
+          <h3>📋 Notas de la Orden</h3>
+        </div>
         <div class="detalle-reparacion">
-          <p><strong>Tipo:</strong> {{ reparacion.tipo }}</p>
-          <p><strong>Diagnóstico:</strong> {{ reparacion.diagnostico }}</p>
-          <p><strong>Procedimiento:</strong> {{ reparacion.procedimiento }}</p>
-          <p><strong>Notas:</strong> {{ reparacion.notas || 'Sin notas adicionales' }}</p>
-          <p><strong>Odómetro:</strong> {{ reparacion.odometro }} km</p>
-          <p><strong>Horómetro:</strong> {{ reparacion.horometro }} hrs</p>
+          <div class="reporte-item">
+            <span class="reporte-icono">🔍</span>
+            <div class="reporte-contenido">
+              <p class="reporte-label">Estado del Vehículo</p>
+              <p class="reporte-value">{{ getEstadoLabel(vehiculo.estado_actual) || 'No disponible' }}</p>
+            </div>
+          </div>
+          
+          <div class="reporte-item">
+            <span class="reporte-icono">📝</span>
+            <div class="reporte-contenido">
+              <p class="reporte-label">Observaciones de la Orden</p>
+              <p class="reporte-value">{{ orden.observaciones || 'Sin observaciones adicionales' }}</p>
+            </div>
+          </div>
+          
+          <div class="reporte-item">
+            <span class="reporte-icono">💰</span>
+            <div class="reporte-contenido">
+              <p class="reporte-label">Monto Total</p>
+              <p class="reporte-value precio">${{ orden.costo_total || '0' }}</p>
+            </div>
+          </div>
+          
+          <div class="reporte-item">
+            <span class="reporte-icono">📅</span>
+            <div class="reporte-contenido">
+              <p class="reporte-label">Fecha de Creación</p>
+              <p class="reporte-value">{{ formatearFecha(orden.fecha_creacion) }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -95,10 +195,10 @@
 
   <Modal
     v-if="mostrarModal"
-    :titulo="boton === 'aprobado' ? '¡Reparación Aprobada!' : '¡Reparación Rechazada!'"
+    :titulo="boton === 'aprobado' ? '¡Orden Aprobada!' : '¡Orden Rechazada!'"
     :mensaje="boton === 'aprobado'
-        ? 'El reporte fue aceptado exitosamente. El vehículo está listo para uso.'
-        : 'El reporte fue rechazado. Se requiere más trabajo en la reparación.'"
+        ? 'La orden de compra fue aprobada exitosamente. Puede proceder con la compra.'
+        : 'La orden de compra fue rechazada. Se requiere revisión adicional antes de proceder.'"
   />
 </template>
 
@@ -118,7 +218,12 @@ const boton = ref(null)
 const loading = ref(true)
 const error = ref(null)
 
-// Datos del backend
+// Datos del backend - NUEVAS VARIABLES
+const orden = ref({})
+const proveedor = ref({})
+const refaccion = ref({})
+
+// Datos del backend - EXISTENTES
 const vehiculo = ref({})
 const reparacion = ref({})
 const mecanico = ref({})
@@ -126,51 +231,105 @@ const mecanico = ref({})
 const router = useRouter()
 const route = useRoute()
 
-// Funciones para cargar datos
+// Función para cargar datos con la nueva consulta simplificada
 const cargarDatos = async () => {
   try {
     loading.value = true
     error.value = null
 
-    const reparacionId = route.params.id // Obtener ID de la URL
+    const ordenId = 1 // ← PRUEBA CON DIFERENTES IDs QUE TENGAN VEHICULOS DISTINTOS
 
-    //  CONSULTA REAL A LA BASE DE DATOS
-    const { data: reparacionData, error: reparacionError } = await supabase
-      .from('reparacion')
+    console.log('🔧 Consultando orden con vehículo ID:', ordenId)
+
+    // También agregar query para verificar qué vehículos están disponibles
+    console.log('📋 Verificando vehículos disponibles en la BD...')
+    const { data: vehiculosDisponibles } = await supabase
+      .from('vehiculo')
+      .select('id, marca, modelo, placa')
+      .limit(5)
+    
+    console.log('🚗 Vehículos en la base de datos:', vehiculosDisponibles)
+
+    // También verificar qué órdenes están asignadas a qué vehículos
+    const { data: ordenesVehiculos } = await supabase
+      .from('orden_compra')
+      .select('id, vehiculo_id')
+      .limit(10)
+    
+    console.log('📊 Mapeo orden → vehículo:', ordenesVehiculos)
+
+    // CONSULTA SIMPLIFICADA: orden_compra + vehículo
+    const { data: ordenData, error: ordenError } = await supabase
+      .from('orden_compra')
       .select(`
-        *,
-        vehiculo (
+        id,
+        fecha_creacion,
+        estado,
+        costo_total,
+        observaciones,
+        vehiculo:vehiculo_id (
           id,
+          marca,
           modelo,
-          año,
           placa,
-          estado_actual,
-          numero_serie
-        ),
-        usuario:mecanico_id (
-          id,
-          nombre,
-          apellido_paterno,
-          apellido_materno
+          numero_serie,
+          estado_actual
         )
       `)
-      .eq('id', reparacionId)
-      .eq('status', 'pendiente') // Solo reparaciones pendientes de aprobación
+      .eq('id', ordenId)
       .single()
 
-    if (reparacionError) {
-      throw new Error('No se pudo cargar el reporte de reparación')
+    console.log('📦 Datos de orden completa:', ordenData)
+
+    if (ordenError) {
+      throw new Error(`Error consulta orden: ${ordenError.message}`)
+    }
+
+    if (!ordenData) {
+      throw new Error(`No existe orden con ID ${ordenId}`)
     }
 
     // Asignar datos a las variables reactivas
-    reparacion.value = reparacionData
-    vehiculo.value = reparacionData.vehiculo
-    mecanico.value = reparacionData.usuario
+    orden.value = ordenData
+    vehiculo.value = ordenData.vehiculo || {}
+    
+    // DEBUG: Verificar datos del vehículo
+    console.log('🚗 Datos del vehículo cargados:', vehiculo.value)
+    console.log('🚗 Marca:', vehiculo.value.marca)
+    console.log('🚗 Modelo:', vehiculo.value.modelo)
+    console.log('🚗 Placa:', vehiculo.value.placa)
+    console.log('🚗 ID del vehículo:', vehiculo.value.id)
+    
+    // Crear nombre completo del vehículo
+    if (vehiculo.value.marca && vehiculo.value.modelo) {
+      vehiculo.value.nombre_completo = `${vehiculo.value.marca} ${vehiculo.value.modelo}`
+      console.log('🚗 Nombre completo creado:', vehiculo.value.nombre_completo)
+    }
 
-    console.log('Datos cargados:', reparacionData)
+    // Datos mock para campos que no están en esta consulta
+    proveedor.value = { nombre: 'Proveedor no especificado' }
+    refaccion.value = { 
+      nombre: 'Refacción no especificada',
+      descripcion: 'Información no disponible en esta consulta',
+      precio_unitario: 0,
+      cantidad_disponible: 0,
+      status: 'pendiente'
+    }
+    reparacion.value = { 
+      diagnostico: 'Información no disponible',
+      procedimiento: 'Pendiente',
+      notas: 'Sin notas',
+      kilometraje: 'N/A'
+    }
+    mecanico.value = { 
+      nombre: 'Sin asignar',
+      apellido_paterno: ''
+    }
+
+    console.log('✅ Carga completa exitosa!')
 
   } catch (err) {
-    console.error('Error al cargar datos:', err)
+    console.error('💥 Error completo:', err)
     error.value = err.message
   } finally {
     loading.value = false
@@ -180,18 +339,58 @@ const cargarDatos = async () => {
 // Funciones de utilidad
 const getEstadoClass = (estado) => {
   const clases = {
+    'pendiente': 'estado-pendiente',
+    'aprobado': 'estado-operativo',
+    'rechazado': 'estado-inactivo',
+    'completado': 'estado-operativo',
     'operativo': 'estado-operativo',
     'reparacion': 'estado-reparacion', 
     'inactivo': 'estado-inactivo'
   }
-  return clases[estado] || ''
+  return clases[estado] || 'estado-pendiente'
+}
+
+const getStatusRefaccionClass = (status) => {
+  const clases = {
+    'disponible': 'refaccion-disponible',
+    'agotado': 'refaccion-agotado',
+    'pedido': 'refaccion-pedido',
+    'defectuoso': 'refaccion-defectuoso'
+  }
+  return clases[status] || 'refaccion-disponible'
+}
+
+// Función para obtener imagen dinámica del vehículo
+const getImagenVehiculo = (marca) => {
+  if (!marca) return '/src/components/icons/default-car.png'
+  
+  const marcaLower = marca.toLowerCase()
+  console.log('🚗 Marca del vehículo:', marca, 'Marca procesada:', marcaLower)
+  
+  // Mapeo de marcas a imágenes
+  const imagenes = {
+    'bmw': '/src/components/icons/bmw.png',
+    'audi': '/src/components/icons/audi.png',
+    'mercedes': '/src/components/icons/mercedes.png',
+    'volkswagen': '/src/components/icons/volkswagen.png',
+    'toyota': '/src/components/icons/toyota.png',
+    'ford': '/src/components/icons/ford.png',
+    'chevrolet': '/src/components/icons/chevrolet.png',
+    'nissan': '/src/components/icons/nissan.png',
+    'honda': '/src/components/icons/honda.png'
+  }
+  
+  return imagenes[marcaLower] || '/src/components/icons/default-car.png'
 }
 
 const getEstadoLabel = (estado) => {
   const labels = {
     'operativo': 'Operativo',
     'reparacion': 'En Reparación',
-    'inactivo': 'Fuera de Servicio'
+    'inactivo': 'Fuera de Servicio',
+    'pendiente': 'Pendiente',
+    'aprobado': 'Aprobado',
+    'rechazado': 'Rechazado'
   }
   return labels[estado] || estado
 }
@@ -240,7 +439,7 @@ function iniciarDesliz(event) {
       mostrarModal.value = true
 
       setTimeout(() => {
-        router.push('/vehiculos')
+        router.push('/') // Cambiar por tu ruta correcta
       }, 2000)
     } else {
       thumbX.value = 0
@@ -262,32 +461,30 @@ function iniciarDesliz(event) {
 //  FUNCIÓN PARA GUARDAR EN LA BASE DE DATOS
 const guardarDecision = async () => {
   try {
+    // 🔍 DEBUG: Ver valores actuales antes de cambiar
+    console.log('📋 Estado actual orden:', orden.value.estado)
+    console.log('🎯 Botón seleccionado:', boton.value)
+    
+    // TEMPORAL: Solo log para evitar errores de enum
+    console.log('⏸️ Guardado pausado para debugging - verificar enum values primero')
+    
+    // TODO: Descomentar cuando sepamos los valores correctos del enum
+    /*
     const usuarioLogueado = JSON.parse(localStorage.getItem('usuario'))
-    const nuevoStatus = boton.value === 'aprobado' ? 'completado' : 'rechazado'
-    const nuevoEstadoVehiculo = boton.value === 'aprobado' ? 'operativo' : 'reparacion'
+    const nuevoEstado = boton.value === 'aprobado' ? 'aprobado' : 'rechazado'
 
-    // 1. Actualizar el status de la reparación
-    const { error: errorReparacion } = await supabase
-      .from('reparacion')
+    // Actualizar el estado de la orden de compra
+    const { error: errorOrden } = await supabase
+      .from('orden_compra')
       .update({
-        status: nuevoStatus,
-        ultima_reparacion: new Date().toISOString()
+        estado: nuevoEstado
       })
-      .eq('id', reparacion.value.id)
+      .eq('id', orden.value.id)
 
-    if (errorReparacion) throw errorReparacion
-
-    // 2. Actualizar el estado del vehículo
-    const { error: errorVehiculo } = await supabase
-      .from('vehiculo')
-      .update({
-        estado_actual: nuevoEstadoVehiculo
-      })
-      .eq('id', vehiculo.value.id)
-
-    if (errorVehiculo) throw errorVehiculo
+    if (errorOrden) throw errorOrden
 
     console.log(`Decisión "${boton.value}" guardada exitosamente`)
+    */
 
   } catch (err) {
     console.error('Error al guardar decisión:', err)
@@ -311,12 +508,15 @@ onMounted(() => {
   height: 300px;
   text-align: center;
   color: #7f8c8d;
+  background-color: #2c3e50;
+  border-radius: 10px;
+  margin: 20px;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #ecf0f1;
+  border: 4px solid #34495e;
   border-top: 4px solid #3498db;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -328,6 +528,17 @@ onMounted(() => {
   100% { transform: rotate(360deg); }
 }
 
+.error-container i {
+  font-size: 48px;
+  color: #e74c3c;
+  margin-bottom: 15px;
+}
+
+.loading-container p, .error-container p {
+  color: white;
+  font-size: 14px;
+}
+
 .retry-btn {
   background-color: #3498db;
   color: white;
@@ -336,19 +547,38 @@ onMounted(() => {
   border-radius: 5px;
   cursor: pointer;
   margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.retry-btn:hover {
+  background-color: #2980b9;
+}
+
+/* Asegurar que todo el contenido sea visible */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 /* Resto de estilos existentes */
 .contenedor-reporte {
   padding: 20px;
+  padding-bottom: 100px; /* Espacio extra para el menú inferior */
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
   background-color: #ffffff;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  /* Permitir scroll */
+  overflow-y: auto;
+  max-height: 100vh;
 }
 
 .encabezado {
@@ -380,6 +610,43 @@ onMounted(() => {
 .estado-operativo { background-color: #10b981; color: white; }
 .estado-reparacion { background-color: #fbbf24; color: #000; }
 .estado-inactivo { background-color: #6b7280; color: white; }
+.estado-pendiente { background-color: #8b5cf6; color: white; }
+
+/* NUEVOS ESTILOS PARA ORDEN Y REFACCIÓN */
+.info-orden, .info-refaccion {
+  background-color: #f3f4f6;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.info-orden h3, .info-refaccion h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.datos-orden p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.info-refaccion p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.info-auto-vacio {
+  background-color: #fef3c7;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  color: #92400e;
+  font-weight: 500;
+}
 
 .info-auto {
   display: flex;
@@ -449,46 +716,51 @@ onMounted(() => {
   justify-content: center;
   gap: 40px;
   margin: 20px 0;
+  padding: 20px;
 }
 
 .botones button {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  font-size: 24px;
+  font-size: 28px;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .inactivo {
-  background-color: #e5e7eb;
-  color: #6b7280;
+  background-color: #95a5a6;
+  color: white;
 }
 
 .activo-verde {
-  background-color: #10b981;
+  background-color: #2ecc71;
   color: white;
   transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
 }
 
 .activo-rojo {
-  background-color: #ef4444;
+  background-color: #e74c3c;
   color: white;
   transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
 }
 
 .slider-container {
   margin-top: 16px;
+  padding: 0 20px;
 }
 
 .slider {
   position: relative;
-  height: 56px;
-  border-radius: 28px;
+  height: 60px;
+  border-radius: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -497,21 +769,22 @@ onMounted(() => {
   font-size: 14px;
   user-select: none;
   overflow: hidden;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .slider-verde {
-  background-color: #10b981;
+  background-color: #2ecc71;
 }
 
 .slider-rojo {
-  background-color: #ef4444;
+  background-color: #e74c3c;
 }
 
 .slider-thumb {
   position: absolute;
-  top: 4px;
-  left: 4px;
+  top: 6px;
+  left: 6px;
   width: 48px;
   height: 48px;
   background-color: white;
@@ -524,31 +797,135 @@ onMounted(() => {
   transition: all 0.3s ease;
   font-size: 18px;
   font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .thumb-verde {
-  color: #10b981;
+  color: #2ecc71;
 }
 
 .thumb-rojo {
-  color: #ef4444;
+  color: #e74c3c;
 }
 
 .deslizado-exito {
-  background-color: #059669 !important;
+  background-color: #27ae60 !important;
 }
 
 .deslizado-rechazo {
-  background-color: #dc2626 !important;
+  background-color: #c0392b !important;
 }
 
-.deslizado-exito .slider-thumb {
-  background-color: #ffffff;
-  color: #059669;
-}
-
+.deslizado-exito .slider-thumb,
 .deslizado-rechazo .slider-thumb {
-  background-color: #ffffff;
-  color: #dc2626;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.reporte-value.precio {
+  color: #00b894;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Responsividad y scroll para móviles */
+@media (max-width: 480px) {
+  .contenedor-reporte {
+    padding: 15px;
+    padding-bottom: 120px;
+    gap: 12px;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .titulo-principal {
+    padding: 16px;
+  }
+  
+  .titulo-principal h2 {
+    font-size: 18px;
+  }
+  
+  .estado-separado {
+    margin: -6px 0 6px 0;
+  }
+  
+  .etiqueta-estado {
+    font-size: 11px;
+    padding: 6px 14px;
+  }
+  
+  .orden-header, .auto-header, .reporte-header, .adicional-header {
+    padding: 12px 16px;
+  }
+  
+  .orden-header h3, .auto-header h3, .reporte-header h3, .adicional-header h3 {
+    font-size: 14px;
+  }
+  
+  .datos-orden, .auto-contenido, .detalle-reparacion, .adicional-contenido {
+    padding: 16px;
+  }
+  
+  .auto-contenido {
+    gap: 16px;
+  }
+  
+  .imagen-auto {
+    width: 80px;
+    height: 80px;
+    padding: 8px;
+  }
+  
+  .vehiculo-nombre {
+    font-size: 16px;
+  }
+  
+  .placa-info, .serie-info, .estado-info {
+    font-size: 13px;
+  }
+  
+  .estado-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .botones {
+    margin: 15px 0;
+    gap: 30px;
+    padding: 16px;
+  }
+  
+  .botones button {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  
+  .slider {
+    height: 56px;
+  }
+  
+  .slider-thumb {
+    width: 44px;
+    height: 44px;
+    top: 6px;
+    left: 6px;
+  }
+  
+  .dato-item, .reporte-item, .info-item {
+    padding: 10px 12px;
+  }
+  
+  .dato-item .icono, .reporte-icono, .info-item .icono {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  
+  .loading-container, .error-container {
+    margin: 15px;
+    height: 250px;
+  }
 }
 </style>
