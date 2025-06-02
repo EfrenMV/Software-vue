@@ -1,4 +1,4 @@
-<!-- MenuNerudo "final" -->
+<!-- MenuNerudo conectado -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -103,7 +103,8 @@ import Header from '@/components/Header.vue';
 import { supabase } from '@/supabase';
 
 // Estado reactivo
-const vehiculos = ref([]);
+const todosLosVehiculos = ref([]); // Array completo para contadores
+const vehiculos = ref([]); // Array que se muestra (puede estar filtrado por búsqueda)
 const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
@@ -112,23 +113,10 @@ const searchTimeout = ref(null);
 
 // Computed properties
 const vehiculosFiltrados = computed(() => {
-  let resultado = vehiculos.value;
-
-  // Filtrar por término de búsqueda
-  if (terminoBusqueda.value.trim()) {
-    const termino = terminoBusqueda.value.toLowerCase().trim();
-    resultado = resultado.filter(vehiculo =>
-      (vehiculo.marca + ' ' + vehiculo.modelo).toLowerCase().includes(termino) ||
-      vehiculo.placa.toLowerCase().includes(termino)
-    );
-  }
-
-  // Filtrar por estado
-  resultado = resultado.filter(vehiculo =>
+  // Filtrar por estado desde vehiculos (que ya puede estar filtrado por búsqueda)
+  return vehiculos.value.filter(vehiculo =>
     vehiculo.estado_actual === filtroActivo.value
   );
-
-  return resultado;
 });
 
 const contadorEstados = computed(() => {
@@ -138,7 +126,18 @@ const contadorEstados = computed(() => {
     inactivo: 0
   };
 
-  vehiculos.value.forEach(vehiculo => {
+  // Usar todosLosVehiculos para contar, pero aplicar filtro de búsqueda si existe
+  let vehiculosParaContar = todosLosVehiculos.value;
+
+  if (terminoBusqueda.value.trim()) {
+    const termino = terminoBusqueda.value.toLowerCase().trim();
+    vehiculosParaContar = vehiculosParaContar.filter(vehiculo =>
+      (vehiculo.marca + ' ' + vehiculo.modelo).toLowerCase().includes(termino) ||
+      vehiculo.placa.toLowerCase().includes(termino)
+    );
+  }
+
+  vehiculosParaContar.forEach(vehiculo => {
     if (vehiculo.estado_actual === 'operativo') contador.operativo++;
     if (vehiculo.estado_actual === 'reparacion') contador.reparacion++;
     if (vehiculo.estado_actual === 'fuera_servicio') contador.inactivo++;
@@ -153,7 +152,7 @@ const cargarVehiculos = async () => {
     loading.value = true;
     error.value = null;
 
-    // Consulta a Supabase
+    // Consulta a Supabase - cargar todos los vehículos
     const { data, error: sbError } = await supabase
       .from('vehiculo')
       .select('*')
@@ -161,7 +160,9 @@ const cargarVehiculos = async () => {
 
     if (sbError) throw sbError;
 
-    vehiculos.value = data;
+    // Guardar en ambos arrays
+    todosLosVehiculos.value = data; // Para contadores
+    vehiculos.value = data; // Para mostrar
 
   } catch (err) {
     console.error('Error al cargar vehículos:', err);
@@ -175,15 +176,21 @@ const buscarVehiculos = async () => {
   try {
     loading.value = true;
 
-    const { data, error: sbError } = await supabase
-      .from('vehiculo')
-      .select('*')
-      .or(`marca.ilike.%${terminoBusqueda.value}%,modelo.ilike.%${terminoBusqueda.value}%,placa.ilike.%${terminoBusqueda.value}%`)
-      .eq('estado_actual', filtroActivo.value);
+    if (terminoBusqueda.value.trim()) {
+      // Si hay término de búsqueda, filtrar desde la base de datos
+      const { data, error: sbError } = await supabase
+        .from('vehiculo')
+        .select('*')
+        .or(`marca.ilike.%${terminoBusqueda.value}%,modelo.ilike.%${terminoBusqueda.value}%,placa.ilike.%${terminoBusqueda.value}%`)
+        .order('id', { ascending: true });
 
-    if (sbError) throw sbError;
+      if (sbError) throw sbError;
 
-    vehiculos.value = data;
+      vehiculos.value = data; // Solo actualizar vehiculos, no todosLosVehiculos
+    } else {
+      // Si no hay búsqueda, mostrar todos
+      vehiculos.value = todosLosVehiculos.value;
+    }
 
   } catch (err) {
     console.error('Error en búsqueda:', err);
@@ -199,9 +206,10 @@ const debounceSearch = () => {
   }, 300);
 };
 
-const cambiarFiltro = async (nuevoFiltro) => {
+const cambiarFiltro = (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-  await buscarVehiculos();
+  // No necesitamos llamar buscarVehiculos aquí porque vehiculosFiltrados
+  // ya maneja el filtrado reactivamente
 };
 
 const verDetalleVehiculo = (id) => {
