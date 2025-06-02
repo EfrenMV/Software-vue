@@ -1,4 +1,4 @@
-<!-- MenuNerudo Final. Conectado & redirige -->
+<!-- MenuNerudo Optimizado - Una sola consulta inicial -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -26,7 +26,6 @@
               type="text"
               placeholder="Buscar vehículo..."
               v-model="terminoBusqueda"
-              @input="debounceSearch"
             >
           </div>
           <div class="filtros">
@@ -78,7 +77,6 @@
                   :alt="vehiculo.marca + ' ' + vehiculo.modelo"
                   @error="handleImageError"
                 >
-                <!-- Precio movido debajo de la imagen -->
                 <div class="costo-vehiculo">
                   <span class="costo-label">$ Pendiente</span>
                 </div>
@@ -106,18 +104,27 @@ import { supabase } from '@/supabase';
 
 // Estado reactivo
 const router = useRouter()
-const todosLosVehiculos = ref([]); // Array para contadores
-const vehiculos = ref([]);
+const todosLosVehiculos = ref([]); // Array principal - UNA SOLA FUENTE DE DATOS
 const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
 const error = ref(null);
-const searchTimeout = ref(null);
 
-// Computed properties
+// COMPUTED PROPERTIES - TODO EL FILTRADO EN FRONTEND
 const vehiculosFiltrados = computed(() => {
-  // Filtrar por estado desde vehiculos
-  return vehiculos.value.filter(vehiculo =>
+  let vehiculosFiltradosPorBusqueda = todosLosVehiculos.value;
+
+  // Filtrar por búsqueda si hay término
+  if (terminoBusqueda.value.trim()) {
+    const termino = terminoBusqueda.value.toLowerCase().trim();
+    vehiculosFiltradosPorBusqueda = todosLosVehiculos.value.filter(vehiculo =>
+      (vehiculo.marca + ' ' + vehiculo.modelo).toLowerCase().includes(termino) ||
+      vehiculo.placa.toLowerCase().includes(termino)
+    );
+  }
+
+  // Filtrar por estado
+  return vehiculosFiltradosPorBusqueda.filter(vehiculo =>
     vehiculo.estado_actual === filtroActivo.value
   );
 });
@@ -129,16 +136,17 @@ const contadorEstados = computed(() => {
     inactivo: 0
   };
 
+  // Filtrar por búsqueda para los contadores
   let vehiculosParaContar = todosLosVehiculos.value;
-
   if (terminoBusqueda.value.trim()) {
     const termino = terminoBusqueda.value.toLowerCase().trim();
-    vehiculosParaContar = vehiculosParaContar.filter(vehiculo =>
+    vehiculosParaContar = todosLosVehiculos.value.filter(vehiculo =>
       (vehiculo.marca + ' ' + vehiculo.modelo).toLowerCase().includes(termino) ||
       vehiculo.placa.toLowerCase().includes(termino)
     );
   }
 
+  // Contar por estado
   vehiculosParaContar.forEach(vehiculo => {
     if (vehiculo.estado_actual === 'operativo') contador.operativo++;
     if (vehiculo.estado_actual === 'reparacion') contador.reparacion++;
@@ -148,13 +156,13 @@ const contadorEstados = computed(() => {
   return contador;
 });
 
-// Métodos
+// MÉTODOS - SOLO UNA CONSULTA INICIAL
 const cargarVehiculos = async () => {
   try {
     loading.value = true;
     error.value = null;
 
-    // Consulta a Supabase - cargar todos los vehículos
+    // UNA SOLA CONSULTA - Cargar todos los vehículos una vez
     const { data, error: sbError } = await supabase
       .from('vehiculo')
       .select('*')
@@ -162,9 +170,9 @@ const cargarVehiculos = async () => {
 
     if (sbError) throw sbError;
 
-    // Guardar en ambos arrays
-    todosLosVehiculos.value = data; // Para contadores
-    vehiculos.value = data; // Para mostrar
+    // Guardar en el array principal
+    todosLosVehiculos.value = data;
+    console.log(`✅ Vehículos cargados: ${data.length} registros`);
 
   } catch (err) {
     console.error('Error al cargar vehículos:', err);
@@ -174,49 +182,19 @@ const cargarVehiculos = async () => {
   }
 };
 
-const buscarVehiculos = async () => {
-  try {
-    loading.value = true;
-
-    if (terminoBusqueda.value.trim()) {
-      const { data, error: sbError } = await supabase
-        .from('vehiculo')
-        .select('*')
-        .or(`marca.ilike.%${terminoBusqueda.value}%,modelo.ilike.%${terminoBusqueda.value}%,placa.ilike.%${terminoBusqueda.value}%`)
-        .order('id', { ascending: true });
-
-      if (sbError) throw sbError;
-
-      vehiculos.value = data; // Solo actualizar vehiculos, no todosLosVehiculos
-    } else {
-      // Si no hay búsqueda, mostrar todos
-      vehiculos.value = todosLosVehiculos.value;
-    }
-
-  } catch (err) {
-    console.error('Error en búsqueda:', err);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const debounceSearch = () => {
-  clearTimeout(searchTimeout.value);
-  searchTimeout.value = setTimeout(() => {
-    buscarVehiculos();
-  }, 300);
-};
+// ELIMINAR buscarVehiculos() y debounceSearch() - Ya no necesarios
+// Todo el filtrado se hace en computed properties
 
 const cambiarFiltro = (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-
+  console.log(`🔄 Filtro cambiado a: ${nuevoFiltro}`);
 };
 
 const verDetalleVehiculo = (id) => {
   router.push({ name: 'DTCONECT', params: { id } })
 }
 
-// Funciones de utilidad
+// Funciones de utilidad - Sin cambios
 const getEstadoClass = (estado) => {
   const clases = {
     'operativo': 'operativo',
@@ -268,7 +246,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Estados de carga y error */
+/* Mismo CSS - sin cambios */
 .loading-container, .error-container {
   display: flex;
   flex-direction: column;
@@ -314,7 +292,6 @@ onMounted(() => {
   background-color: #2980b9;
 }
 
-/* Lista de vehículos */
 .vehiculos-lista {
   width: 100%;
   display: flex;
@@ -479,7 +456,6 @@ onMounted(() => {
   font-weight: bold;
 }
 
-/* Barra superior */
 .barra-superior {
   background-color: #2c3e50;
   padding: 10px 15px;
