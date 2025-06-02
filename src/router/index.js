@@ -49,7 +49,7 @@ component: () => import('@/views/MenuNerudo.vue'),
   component: () => import('@/views/carrito_hot_wheels.vue')
 },
 {
-  path: '/DTCONECT',
+  path: '/DTCONECT/:id',
   name: 'DTCONECT',
   component: () => import('@/views/DVconect.vue')
 }

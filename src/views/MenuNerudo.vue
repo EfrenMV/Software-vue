@@ -1,4 +1,4 @@
-<!-- MenuNerudo conectado -->
+<!-- MenuNerudo Final. Conectado & redirige -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -98,14 +98,16 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue';
 import Menu from '@/components/Menu.vue';
 import Header from '@/components/Header.vue';
 import { supabase } from '@/supabase';
 
 // Estado reactivo
-const todosLosVehiculos = ref([]); // Array completo para contadores
-const vehiculos = ref([]); // Array que se muestra (puede estar filtrado por búsqueda)
+const router = useRouter()
+const todosLosVehiculos = ref([]); // Array para contadores
+const vehiculos = ref([]);
 const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
@@ -114,7 +116,7 @@ const searchTimeout = ref(null);
 
 // Computed properties
 const vehiculosFiltrados = computed(() => {
-  // Filtrar por estado desde vehiculos (que ya puede estar filtrado por búsqueda)
+  // Filtrar por estado desde vehiculos
   return vehiculos.value.filter(vehiculo =>
     vehiculo.estado_actual === filtroActivo.value
   );
@@ -127,7 +129,6 @@ const contadorEstados = computed(() => {
     inactivo: 0
   };
 
-  // Usar todosLosVehiculos para contar, pero aplicar filtro de búsqueda si existe
   let vehiculosParaContar = todosLosVehiculos.value;
 
   if (terminoBusqueda.value.trim()) {
@@ -178,7 +179,6 @@ const buscarVehiculos = async () => {
     loading.value = true;
 
     if (terminoBusqueda.value.trim()) {
-      // Si hay término de búsqueda, filtrar desde la base de datos
       const { data, error: sbError } = await supabase
         .from('vehiculo')
         .select('*')
@@ -209,14 +209,12 @@ const debounceSearch = () => {
 
 const cambiarFiltro = (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-  // No necesitamos llamar buscarVehiculos aquí porque vehiculosFiltrados
-  // ya maneja el filtrado reactivamente
+
 };
 
 const verDetalleVehiculo = (id) => {
-  console.log('Ver detalle del vehículo:', id);
-  // router.push(`/vehiculos/${id}`);
-};
+  router.push({ name: 'DTCONECT', params: { id } })
+}
 
 // Funciones de utilidad
 const getEstadoClass = (estado) => {
@@ -352,7 +350,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
-  gap: 8px; /* Espacio entre imagen y precio */
+  gap: 8px;
 }
 
 .imagen-vehiculo {
@@ -369,7 +367,7 @@ onMounted(() => {
 .costo-vehiculo {
   display: flex;
   align-items: center;
-  justify-content: center; /* Centrar el precio debajo de la imagen */
+  justify-content: center;
   flex-shrink: 0;
 }
 

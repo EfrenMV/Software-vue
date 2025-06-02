@@ -1,3 +1,4 @@
+<!-- Detalles vehiculo original -->
 <template>
   <div class="detalle-vehiculo">
     <!-- Header -->
@@ -73,21 +74,6 @@ const placaVehiculo = route.params.placa;
   -webkit-overflow-scrolling: touch;
 }
 
-.menu-fijo {
-  position: fixed;
-  bottom: 5rem;
-  width: 100%;
-  max-width: 345px;
-  height: 50px;
-  z-index: 100;
-  background-color: white;
-  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-  border-radius: 15px;
-  margin: 0 auto;
-  left: 0;
-  right: 0;
-}
-
 .fecha-reparacion {
   font-size: 14px;
   color: #666;
@@ -156,17 +142,6 @@ const placaVehiculo = route.params.placa;
   max-width: 70%;
   height: auto;
   border-radius: 8px;
-}
-
-@media (max-height: 700px) {
-  .contenido-scrollable {
-    padding-bottom: 50px;
-  }
-
-  .menu-fijo {
-    bottom: 5px;
-    height: 45px;
-  }
 }
 
 .circulo-verde {

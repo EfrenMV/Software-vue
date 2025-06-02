@@ -1,4 +1,4 @@
-<!-- MenuNerudo conectado con formato de ficha -->
+<!-- Hotwhe Final. Conectado & Redirige-->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -61,7 +61,6 @@
           <small>Intenta con otro término de búsqueda o cambia el filtro</small>
         </div>
 
-        <!-- Lista de Vehículos - Grid de 2 columnas como el primer código -->
         <div class="vehiculos-lista">
           <div
             v-for="vehiculo in vehiculosFiltrados"
@@ -71,7 +70,6 @@
             @click="verDetalleVehiculo(vehiculo.id)"
           >
             <div class="contenido-vehiculo">
-              <!-- Estructura como el primer código: estado arriba, imagen, texto abajo -->
               <div class="imagen-container">
                 <div class="estado-label" :class="getEstadoLabelClass(vehiculo.estado_actual)">
                   {{ getEstadoLabel(vehiculo.estado_actual) }}
@@ -98,14 +96,16 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue';
 import Menu from '@/components/Menu.vue';
 import Header from '@/components/Header.vue';
 import { supabase } from '@/supabase';
 
 // Estado reactivo
-const todosLosVehiculos = ref([]); // Array completo para contadores
-const vehiculos = ref([]); // Array que se muestra (puede estar filtrado por búsqueda)
+const router = useRouter()
+const todosLosVehiculos = ref([]);
+const vehiculos = ref([]);
 const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
@@ -114,7 +114,6 @@ const searchTimeout = ref(null);
 
 // Computed properties
 const vehiculosFiltrados = computed(() => {
-  // Filtrar por estado desde vehiculos (que ya puede estar filtrado por búsqueda)
   return vehiculos.value.filter(vehiculo =>
     vehiculo.estado_actual === filtroActivo.value
   );
@@ -178,7 +177,6 @@ const buscarVehiculos = async () => {
     loading.value = true;
 
     if (terminoBusqueda.value.trim()) {
-      // Si hay término de búsqueda, filtrar desde la base de datos
       const { data, error: sbError } = await supabase
         .from('vehiculo')
         .select('*')
@@ -187,7 +185,7 @@ const buscarVehiculos = async () => {
 
       if (sbError) throw sbError;
 
-      vehiculos.value = data; // Solo actualizar vehiculos, no todosLosVehiculos
+      vehiculos.value = data;
     } else {
       // Si no hay búsqueda, mostrar todos
       vehiculos.value = todosLosVehiculos.value;
@@ -209,14 +207,11 @@ const debounceSearch = () => {
 
 const cambiarFiltro = (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-  // No necesitamos llamar buscarVehiculos aquí porque vehiculosFiltrados
-  // ya maneja el filtrado reactivamente
 };
 
 const verDetalleVehiculo = (id) => {
-  console.log('Ver detalle del vehículo:', id);
-  // router.push(`/vehiculos/${id}`);
-};
+  router.push({ name: 'DTCONECT', params: { id } })
+}
 
 // Funciones de utilidad
 const getEstadoClass = (estado) => {
@@ -288,7 +283,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Estados de carga y error */
 .loading-container, .error-container {
   display: flex;
   flex-direction: column;
@@ -334,7 +328,6 @@ onMounted(() => {
   background-color: #2980b9;
 }
 
-/* Lista de vehículos - GRID DE 2 COLUMNAS como el primer código */
 .vehiculos-lista {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -367,7 +360,6 @@ onMounted(() => {
   gap: 10px;
 }
 
-/* Contenedor de imagen con etiqueta de estado ARRIBA */
 .imagen-container {
   display: flex;
   flex-direction: column;
@@ -383,7 +375,6 @@ onMounted(() => {
   border-radius: 8px;
 }
 
-/* Etiqueta de estado arriba de la imagen */
 .estado-label {
   color: white;
   padding: 2px 8px;
@@ -583,7 +574,6 @@ onMounted(() => {
   background-color: #757575 !important;
 }
 
-/* Resto de estilos base */
 .vehiculos-view {
   width: 345px;
   height: 650px;
