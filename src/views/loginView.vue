@@ -83,6 +83,9 @@ import { ref, computed } from 'vue'
 import Header from '@/components/Header.vue'
  import { supabase } from '@/supabase.js' // Asegúrate de importar bien
 
+ import { useRouter } from 'vue-router'
+const router = useRouter()
+
 const usuario = ref('')
 const contraseña = ref('')
 const showpopup = ref(false)
@@ -120,6 +123,12 @@ const handleLogin = async () => {
     loginSuccess.value = true
     showpopup.value = true
     console.log('Login exitoso:', data)
+
+   // Esperar 1.5 segundos y redirigir
+    setTimeout(() => {
+      router.push('/usuario') // o usa { name: 'Dashboard' } si usas nombres en el router
+    }, 1500)
+
   }
 }
 
