@@ -1,4 +1,4 @@
-<!-- Hotwhe Final. Optimizado - Solo campos necesarios -->
+<!-- Hotwhe Final. Optimizado - Con imágenes desde evidencia -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -76,7 +76,7 @@
                 </div>
                 <img
                   class="imagen-vehiculo"
-                  :src="vehiculo.imagen || '/img/vehiculos/default.png'"
+                  :src="vehiculo.imagen_evidencia || '/img/vehiculos/default.png'"
                   :alt="vehiculo.marca + ' ' + vehiculo.modelo"
                   @error="handleImageError"
                 >
@@ -93,11 +93,9 @@
     </div>
 
     <!-- Botón flotante de gráficas -->
-   <RouterLink to="/graficas">
-    <button class="boton-flotante">
-    <i class="fas fa-chart-line"></i>
+    <button class="boton-flotante" @click="abrirGraficas">
+      <i class="fas fa-chart-line"></i>
     </button>
-    </RouterLink>
 
     <Menu></Menu>
   </div>
@@ -119,9 +117,6 @@ const terminoBusqueda = ref('');
 const loading = ref(false);
 const error = ref(null);
 const searchTimeout = ref(null);
-
-// Campos específicos que necesitamos (evita SELECT *)
-const camposNecesarios = 'id, marca, modelo, placa, estado_actual, imagen, ultima_reparacion';
 
 // Computed properties
 const vehiculosFiltrados = computed(() => {
@@ -163,17 +158,68 @@ const cargarVehiculos = async () => {
     loading.value = true;
     error.value = null;
 
-    // Consulta optimizada - solo campos necesarios
+    // Consulta optimizada con JOIN para obtener la imagen más reciente de evidencia
     const { data, error: sbError } = await supabase
       .from('vehiculo')
-      .select(camposNecesarios)
+      .select(`
+        id,
+        marca,
+        modelo,
+        placa,
+        estado_actual,
+        ultima_reparacion,
+        reparacion(
+          id,
+          evidencia(
+            url_archivo,
+            fecha_subida,
+            tipo
+          )
+        )
+      `)
       .order('id', { ascending: true });
 
     if (sbError) throw sbError;
 
+    // Procesar los datos para obtener la imagen más reciente de cada vehículo
+    const vehiculosConImagenes = data.map(vehiculo => {
+      let imagenEvidencia = null;
+
+      // Buscar en todas las reparaciones del vehículo
+      if (vehiculo.reparacion && vehiculo.reparacion.length > 0) {
+        let evidenciasConImagen = [];
+
+        vehiculo.reparacion.forEach(reparacion => {
+          if (reparacion.evidencia && reparacion.evidencia.length > 0) {
+            // Filtrar solo evidencias de tipo imagen
+            const imagenesEvidencia = reparacion.evidencia.filter(ev =>
+              ev.tipo === 'imagen' && ev.url_archivo
+            );
+            evidenciasConImagen.push(...imagenesEvidencia);
+          }
+        });
+
+        // Ordenar por fecha más reciente y tomar la primera
+        if (evidenciasConImagen.length > 0) {
+          evidenciasConImagen.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
+          imagenEvidencia = evidenciasConImagen[0].url_archivo;
+        }
+      }
+
+      return {
+        id: vehiculo.id,
+        marca: vehiculo.marca,
+        modelo: vehiculo.modelo,
+        placa: vehiculo.placa,
+        estado_actual: vehiculo.estado_actual,
+        ultima_reparacion: vehiculo.ultima_reparacion,
+        imagen_evidencia: imagenEvidencia
+      };
+    });
+
     // Guardar en ambos arrays
-    todosLosVehiculos.value = data; // Para contadores
-    vehiculos.value = data; // Para mostrar
+    todosLosVehiculos.value = vehiculosConImagenes;
+    vehiculos.value = vehiculosConImagenes;
 
   } catch (err) {
     console.error('Error al cargar vehículos:', err);
@@ -188,16 +234,64 @@ const buscarVehiculos = async () => {
     loading.value = true;
 
     if (terminoBusqueda.value.trim()) {
-      // Consulta optimizada con campos específicos
+      // Consulta optimizada con JOIN y filtro de búsqueda
       const { data, error: sbError } = await supabase
         .from('vehiculo')
-        .select(camposNecesarios)
+        .select(`
+          id,
+          marca,
+          modelo,
+          placa,
+          estado_actual,
+          ultima_reparacion,
+          reparacion(
+            id,
+            evidencia(
+              url_archivo,
+              fecha_subida,
+              tipo
+            )
+          )
+        `)
         .or(`marca.ilike.%${terminoBusqueda.value}%,modelo.ilike.%${terminoBusqueda.value}%,placa.ilike.%${terminoBusqueda.value}%`)
         .order('id', { ascending: true });
 
       if (sbError) throw sbError;
 
-      vehiculos.value = data;
+      // Procesar los datos igual que en cargarVehiculos
+      const vehiculosConImagenes = data.map(vehiculo => {
+        let imagenEvidencia = null;
+
+        if (vehiculo.reparacion && vehiculo.reparacion.length > 0) {
+          let evidenciasConImagen = [];
+
+          vehiculo.reparacion.forEach(reparacion => {
+            if (reparacion.evidencia && reparacion.evidencia.length > 0) {
+              const imagenesEvidencia = reparacion.evidencia.filter(ev =>
+                ev.tipo === 'imagen' && ev.url_archivo
+              );
+              evidenciasConImagen.push(...imagenesEvidencia);
+            }
+          });
+
+          if (evidenciasConImagen.length > 0) {
+            evidenciasConImagen.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
+            imagenEvidencia = evidenciasConImagen[0].url_archivo;
+          }
+        }
+
+        return {
+          id: vehiculo.id,
+          marca: vehiculo.marca,
+          modelo: vehiculo.modelo,
+          placa: vehiculo.placa,
+          estado_actual: vehiculo.estado_actual,
+          ultima_reparacion: vehiculo.ultima_reparacion,
+          imagen_evidencia: imagenEvidencia
+        };
+      });
+
+      vehiculos.value = vehiculosConImagenes;
     } else {
       // Si no hay búsqueda, mostrar todos los cargados
       vehiculos.value = todosLosVehiculos.value;
