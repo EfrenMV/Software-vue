@@ -39,7 +39,7 @@ component: () => import('@/views/MenuNerudo.vue'),
 component: () => import('@/views/MenuNerudo.vue'),
 },
 {
-  path: '/vehiculo/:placa',
+  path: '/Detallesvehi',
   name: 'VehiculoDetalle',
   component: () => import('@/views/DetalleVehiculoView.vue')
 },

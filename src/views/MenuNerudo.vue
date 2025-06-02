@@ -97,10 +97,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Menu from '@/components/Menu.vue';
 import Header from '@/components/Header.vue';
-// import { vehiculosService } from '@/services/vehiculosService'; // Descomentar cuando esté disponible
+import { supabase } from '@/supabase'; // Importar cliente Supabase
 
 // Estado reactivo
 const vehiculos = ref([]);
@@ -109,70 +109,6 @@ const terminoBusqueda = ref('');
 const loading = ref(false);
 const error = ref(null);
 const searchTimeout = ref(null);
-
-// MOCK DATA - Remover cuando se integre el backend
-const mockVehiculos = [
-  {
-    id: 1,
-    nombre: "BMW Z4 coupe",
-    placa: "M-QB-1180",
-    fecha_ultima_reparacion: "2023-02-16",
-    imagen: "/img/vehiculos/z4.png",
-    estado: "OPERATIVO",
-    costo: 45000,
-    mecanico: "Juan Pérez"
-  },
-  {
-    id: 2,
-    nombre: "Mercedez CLE coupe",
-    placa: "S-CL-2362",
-    fecha_ultima_reparacion: "2022-06-15",
-    imagen: "/img/vehiculos/CLE_coupe.png",
-    estado: "OPERATIVO",
-    costo: 75000,
-    mecanico: "Ana García"
-  },
-  {
-    id: 3,
-    nombre: "Nissan Sedan Azul",
-    placa: "PFX-266",
-    fecha_ultima_reparacion: "2024-03-27",
-    imagen: "/img/vehiculos/onix.png",
-    estado: "OPERATIVO",
-    costo: 28000,
-    mecanico: "Luis Rodriguez"
-  },
-  {
-    id: 4,
-    nombre: "BMW Serie 1 Azul",
-    placa: "MWY-666",
-    fecha_ultima_reparacion: "2024-04-02",
-    imagen: "/img/vehiculos/bmw.png",
-    estado: "REPARACION",
-    costo: 52000,
-    mecanico: "Carlos Mendoza"
-  },
-  {
-    id: 5,
-    nombre: "Mercedez clase G",
-    placa: "GE-736-865",
-    fecha_ultima_reparacion: "2024-03-27",
-    imagen: "/img/vehiculos/clase_g.png",
-    estado: "INACTIVO",
-    costo: 120000,
-    mecanico: "María López"
-  },
-  {
-    id: 6,
-    nombre: "Ford Mustang",
-    placa: "MNN-777",
-    fecha_ultima_reparacion: "2024-03-27",
-    imagen: "/img/vehiculos/mustang.png",
-    estado: "INACTIVO",
-    costo: 65000,
-    mecanico: "Pedro Jiménez"
-  }
-];
 
 // Computed properties
 const vehiculosFiltrados = computed(() => {
@@ -219,13 +155,31 @@ const cargarVehiculos = async () => {
     loading.value = true;
     error.value = null;
 
-    // Reemplazar con llamada real al backend
-    // const response = await vehiculosService.obtenerTodos();
-    // vehiculos.value = response.data;
+    // Consulta a Supabase
+    const { data, error: sbError } = await supabase
+      .from('vehiculo')
+      .select(`
+        id,
+        marca,
+        modelo,
+        ultima_reparacion,
+        placa,
+        estado_actual
+      `)
+      .order('id', { ascending: true });
 
-    // Simulando llamada async con mock data
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    vehiculos.value = mockVehiculos;
+    if (sbError) throw sbError;
+
+    // Mapear datos de Supabase a estructura esperada
+    vehiculos.value = data.map(vehiculo => ({
+      id: vehiculo.id,
+      nombre: `${vehiculo.marca} ${vehiculo.modelo}`,
+      placa: vehiculo.placa,
+      fecha_ultima_reparacion: vehiculo.ultima_reparacion,
+      imagen: null, // Usaremos imagen por defecto
+      estado: vehiculo.estado_actual,
+      costo: 0 // Valor por defecto para costo
+    }));
 
   } catch (err) {
     console.error('Error al cargar vehículos:', err);
@@ -241,15 +195,25 @@ const buscarVehiculos = async (termino) => {
   try {
     loading.value = true;
 
-    // Implementar búsqueda en backend
-    // const response = await vehiculosService.buscar({
-    //   termino: termino,
-    //   estado: filtroActivo.value
-    // });
-    // vehiculos.value = response.data;
+    // Búsqueda en Supabase
+    const { data, error: sbError } = await supabase
+      .from('vehiculo')
+      .select()
+      .or(`marca.ilike.%${termino}%,modelo.ilike.%${termino}%,placa.ilike.%${termino}%`)
+      .eq('estado_actual', filtroActivo.value);
 
-    // Por ahora, la búsqueda se hace en el frontend con computed
-    console.log('Buscando:', termino);
+    if (sbError) throw sbError;
+
+    // Mapear resultados
+    vehiculos.value = data.map(vehiculo => ({
+      id: vehiculo.id,
+      nombre: `${vehiculo.marca} ${vehiculo.modelo}`,
+      placa: vehiculo.placa,
+      fecha_ultima_reparacion: vehiculo.ultima_reparacion,
+      imagen: null,
+      estado: vehiculo.estado_actual,
+      costo: 0
+    }));
 
   } catch (err) {
     console.error('Error en búsqueda:', err);
@@ -267,9 +231,7 @@ const debounceSearch = () => {
 
 const cambiarFiltro = async (nuevoFiltro) => {
   filtroActivo.value = nuevoFiltro;
-
-  // filtrar en backend, descomenta:
-  // await cargarVehiculos();
+  await buscarVehiculos(terminoBusqueda.value);
 };
 
 const verDetalleVehiculo = (id) => {
@@ -287,27 +249,7 @@ const getEstadoClass = (estado) => {
   return clases[estado] || '';
 };
 
-const getEstadoLabel = (estado) => {
-  const labels = {
-    'OPERATIVO': 'Operativo',
-    'REPARACION': 'En Reparación',
-    'INACTIVO': 'Fuera de Servicio'
-  };
-  return labels[estado] || estado;
-};
-
-const getEstadoLabelClass = (estado) => {
-  const clases = {
-    'OPERATIVO': 'estado-operativo',
-    'REPARACION': 'estado-reparacion',
-    'INACTIVO': 'estado-inactivo'
-  };
-  return clases[estado] || '';
-};
-
 const formatearCosto = (costo) => {
-  if (!costo) return '$0';
-
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
@@ -345,11 +287,6 @@ const handleImageError = (event) => {
 // Lifecycle hooks
 onMounted(() => {
   cargarVehiculos();
-});
-
-// Watchers
-watch(filtroActivo, (nuevoFiltro) => {
-  console.log('Filtro cambiado a:', nuevoFiltro);
 });
 </script>
 

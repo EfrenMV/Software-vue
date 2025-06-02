@@ -1,40 +1,54 @@
 <template>
   <div class="detalle-vehiculo">
-    <!-- Header -->
     <Header />
 
-    <!-- Contenido principal con scroll -->
-    <div class="contenido-scrollable">
-      <!-- Fecha de última reparación -->
+    <div class="contenido-scrollable" v-if="vehiculo">
+      <!-- Fecha dinámica -->
       <div class="fecha-reparacion">
-        Últ reparación: <strong>14/11/2024</strong>
+        Últ reparación: <strong>{{ vehiculo.ultima_reparacion_formateada || 'N/A' }}</strong>
       </div>
 
-      <!-- Estado del vehículo -->
-      <div class="estado-badge operativo">
-        <span class="circulo-verde"></span> Operativo
+      <!-- Estado dinámico -->
+      <div
+        class="estado-badge"
+        :class="vehiculo.estado_actual"
+        :style="{ backgroundColor: estadoInfo[vehiculo.estado_actual]?.fondo }"
+      >
+        <span
+          class="circulo"
+          :style="{ backgroundColor: estadoInfo[vehiculo.estado_actual]?.color }"
+        ></span>
+        {{ estadoInfo[vehiculo.estado_actual]?.texto || vehiculo.estado_actual }}
       </div>
 
       <div class="imagen-vehiculo">
-        <img src="/img/vehiculos/claseG.png" alt="Mercedes Clase G" class="imagen" width="70%">
+        <img
+          :src="imagenUrl"
+          :alt="vehiculo.modelo"
+          class="imagen"
+          width="70%"
+          @error="handleImageError"
+        >
       </div>
 
-      <!-- Información del vehículo -->
+      <!-- Información dinámica -->
       <div class="info-vehiculo">
-        <h2>Mercedes Clase G</h2>
-        <h3>Placa <strong>GE-736865</strong></h3>
-      </div>
-
-      <!-- Descripción -->
-      <div class="descripcion">
-        <p>
-          Se reemplazó el sistema de frenos ABS tras detectar una pérdida de presión en la línea principal. También se
-          realizó un escaneo completo de errores y limpieza de sensores electrónicos.
-        </p>
+        <h2>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h2>
+        <h3>Placa <strong>{{ vehiculo.placa }}</strong></h3>
+        <h3 v-if="vehiculo.numero_serie">N° Serie <strong>{{ vehiculo.numero_serie }}</strong></h3>
       </div>
     </div>
 
-    <!-- Menú inferior fijo (ajustado más arriba) -->
+    <!-- Mensajes de estado -->
+    <div v-if="cargando" class="mensaje-estado">
+      <p>Cargando información del vehículo...</p>
+    </div>
+
+    <div v-if="error" class="mensaje-estado error">
+      <p>Error al cargar el vehículo: {{ error }}</p>
+      <button @click="cargarDatosVehiculo">Reintentar</button>
+    </div>
+
     <div class="menu-fijo">
       <Menu />
     </div>
@@ -42,14 +56,83 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
-import { useRoute } from 'vue-router';
-import Header from '@/components/Header.vue';
-import Menu from '@/components/Menu.vue';
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import Header from '@/components/Header.vue'
+import Menu from '@/components/Menu.vue'
+import { supabase } from '@/supabase'
 
-const router = useRouter();
-const route = useRoute();
-const placaVehiculo = route.params.placa;
+const route = useRoute()
+const placa = route.params.placa
+const vehiculo = ref(null)
+const cargando = ref(true)
+const error = ref(null)
+
+// Configuración de estados
+const estadoInfo = {
+  operativo: {
+    texto: 'Operativo',
+    color: '#4CAF50',
+    fondo: '#a7d782'
+  },
+  en_reparacion: {
+    texto: 'En reparación',
+    color: '#FF9800',
+    fondo: '#ffcc80'
+  },
+  inactivo: {
+    texto: 'Inactivo',
+    color: '#F44336',
+    fondo: '#e57373'
+  }
+}
+
+// URL de imagen (puedes personalizar esto según tus necesidades)
+const imagenUrl = computed(() => {
+  return `/img/vehiculos/${vehiculo.value?.modelo?.toLowerCase().replace(/\s+/g, '') || 'default'}.png`
+})
+
+// Manejar errores de imagen
+const handleImageError = (event) => {
+  event.target.src = '/img/vehiculos/default.png'
+}
+
+// Obtener datos del vehículo
+const cargarDatosVehiculo = async () => {
+  try {
+    cargando.value = true
+    error.value = null
+
+    const { data, error: supabaseError } = await supabase
+      .from('vehiculo')
+      .select('id, marca, modelo, ultima_reparacion, numero_serie, placa, estado_actual')
+      .eq('placa', placa)
+      .single()
+
+    if (supabaseError) throw supabaseError
+    if (!data) throw new Error('Vehículo no encontrado')
+
+    // Formatear fecha si existe
+    if (data.ultima_reparacion) {
+      const fecha = new Date(data.ultima_reparacion)
+      if (!isNaN(fecha)) {
+        data.ultima_reparacion_formateada = fecha.toLocaleDateString('es-ES')
+      } else {
+        // Si no es una fecha válida, mostrar el valor original
+        data.ultima_reparacion_formateada = data.ultima_reparacion
+      }
+    }
+
+    vehiculo.value = data
+  } catch (err) {
+    console.error('Error al cargar vehículo:', err)
+    error.value = err.message || 'Error desconocido'
+  } finally {
+    cargando.value = false
+  }
+}
+
+onMounted(cargarDatosVehiculo)
 </script>
 
 <style scoped>
@@ -103,17 +186,12 @@ const placaVehiculo = route.params.placa;
   font-size: 14px;
   font-weight: bold;
   margin-bottom: 20px;
-    margin-left: auto;
+  margin-left: auto;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   width: fit-content;
-}
-
-.estado-badge.operativo {
-  background-color: #a7d782;
-   font-family: 'Roboto', sans-serif;
-  color: #ffffff;
+  color: #333;
 }
 
 .info-vehiculo {
@@ -129,22 +207,9 @@ const placaVehiculo = route.params.placa;
 
 .info-vehiculo h3 {
   font-size: 16px;
-  margin: 0;
+  margin: 5px 0;
   color: #666;
   font-weight: normal;
-}
-
-.descripcion {
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 30px;
-}
-
-.descripcion p {
-  margin: 0;
-  color: #333;
-  line-height: 1.5;
 }
 
 .imagen-vehiculo {
@@ -169,13 +234,36 @@ const placaVehiculo = route.params.placa;
   }
 }
 
-.circulo-verde {
+.circulo {
   display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: #4CAF50;
   margin-right: 8px;
-  vertical-align: middle;
+}
+
+.mensaje-estado {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.mensaje-estado.error {
+  color: #f44336;
+}
+
+.mensaje-estado button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
