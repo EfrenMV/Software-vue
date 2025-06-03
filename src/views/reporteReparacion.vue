@@ -196,14 +196,15 @@
   <Modal
     v-if="mostrarModal"
     :titulo="boton === 'aprobado' ? '¡Orden Aprobada!' : '¡Orden Rechazada!'"
-    :mensaje="boton === 'aprobado'
-        ? 'La orden de compra fue aprobada exitosamente. Puede proceder con la compra.'
-        : 'La orden de compra fue rechazada. Se requiere revisión adicional antes de proceder.'"
+    :mensaje="(boton === 'aprobado'
+        ? `La orden de compra fue aprobada exitosamente. Se ha creado una nueva reparación en curso para el vehículo ${vehiculo.marca} ${vehiculo.modelo}.`
+        : `La orden de compra fue rechazada. No se realizarán cambios en el vehículo ${vehiculo.marca} ${vehiculo.modelo}.`) + 
+        `\n\n\nRedirigiendo al menú principal en ${tiempoRestante} segundos...`"
   />
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import Header from '@/components/Header.vue'
@@ -419,6 +420,8 @@ function seleccionar(opcion) {
 const thumbX = ref(0)
 const deslizado = ref(false)
 const maxX = 220
+const tiempoRestante = ref(5) // Contador para el modal
+const contadorInterval = ref(null) // Referencia para limpiar el interval
 
 function iniciarDesliz(event) {
   const startX = event.touches ? event.touches[0].clientX : event.clientX
@@ -437,10 +440,17 @@ function iniciarDesliz(event) {
       await guardarDecision()
       
       mostrarModal.value = true
+      tiempoRestante.value = 5
 
-      setTimeout(() => {
-        router.push('/') // Cambiar por tu ruta correcta
-      }, 2000)
+      // Contador regresivo visual
+      contadorInterval.value = setInterval(() => {
+        tiempoRestante.value--
+        if (tiempoRestante.value <= 0) {
+          clearInterval(contadorInterval.value)
+          router.push({ name: 'MenuNerudo' }) // Cambiar por el nombre correcto de tu ruta
+        }
+      }, 1000)
+
     } else {
       thumbX.value = 0
     }
@@ -461,40 +471,177 @@ function iniciarDesliz(event) {
 //  FUNCIÓN PARA GUARDAR EN LA BASE DE DATOS
 const guardarDecision = async () => {
   try {
-    // 🔍 DEBUG: Ver valores actuales antes de cambiar
-    console.log('📋 Estado actual orden:', orden.value.estado)
-    console.log('🎯 Botón seleccionado:', boton.value)
-    
-    // TEMPORAL: Solo log para evitar errores de enum
-    console.log('⏸️ Guardado pausado para debugging - verificar enum values primero')
-    
-    // TODO: Descomentar cuando sepamos los valores correctos del enum
-    /*
+    console.log('💾 Iniciando proceso de guardado...')
+    console.log('🎯 Decisión seleccionada:', boton.value)
+    console.log('📦 Datos de la orden:', orden.value)
+    console.log('🚗 Datos del vehículo:', vehiculo.value)
+
     const usuarioLogueado = JSON.parse(localStorage.getItem('usuario'))
-    const nuevoEstado = boton.value === 'aprobado' ? 'aprobado' : 'rechazado'
+    const fechaActual = new Date().toISOString()
 
-    // Actualizar el estado de la orden de compra
-    const { error: errorOrden } = await supabase
-      .from('orden_compra')
-      .update({
-        estado: nuevoEstado
-      })
-      .eq('id', orden.value.id)
+    if (boton.value === 'aprobado') {
+      // ✅ LÓGICA DE APROBACIÓN
+      console.log('✅ Procesando APROBACIÓN...')
 
-    if (errorOrden) throw errorOrden
+      // 1. Actualizar orden de compra - PROBANDO DIFERENTES VALORES
+      console.log('📝 Actualizando orden de compra...')
+      
+      // Intentar con "aprobada" primero (valor más probable)
+      let estadoAprobado = 'aprobada'
+      let { error: errorOrden } = await supabase
+        .from('orden_compra')
+        .update({
+          estado: estadoAprobado
+        })
+        .eq('id', orden.value.id)
 
-    console.log(`Decisión "${boton.value}" guardada exitosamente`)
-    */
+      // Si falla, intentar con otros valores posibles
+      if (errorOrden && errorOrden.message.includes('invalid input value for enum')) {
+        console.log('⚠️ "aprobada" no es válido, intentando "completa"...')
+        estadoAprobado = 'completa'
+        const resultado2 = await supabase
+          .from('orden_compra')
+          .update({
+            estado: estadoAprobado
+          })
+          .eq('id', orden.value.id)
+        errorOrden = resultado2.error
+      }
+
+      if (errorOrden && errorOrden.message.includes('invalid input value for enum')) {
+        console.log('⚠️ "completa" no es válido, intentando "finalizada"...')
+        estadoAprobado = 'finalizada'
+        const resultado3 = await supabase
+          .from('orden_compra')
+          .update({
+            estado: estadoAprobado
+          })
+          .eq('id', orden.value.id)
+        errorOrden = resultado3.error
+      }
+
+      if (errorOrden) {
+        console.error('❌ Error al actualizar orden con todos los valores probados:', errorOrden)
+        throw new Error(`Error al actualizar orden: ${errorOrden.message}. Valores probados: aprobada, completa, finalizada`)
+      }
+
+      console.log(`✅ Orden actualizada a "${estadoAprobado}"`)
+
+      // 2. Crear nueva reparación con status "en_curso"
+      console.log('🔧 Creando nueva reparación...')
+      const nuevaReparacion = {
+        fecha: fechaActual,
+        vehiculo_id: vehiculo.value.id,
+        tipo: 'correctivo', // Puedes ajustar esto según tu lógica
+        status: 'en_curso',
+        mecanico_id: usuarioLogueado?.id || 1, // ID del usuario logueado
+        hora_inicio: fechaActual,
+        hora_termino: null,
+        ultima_reparacion: fechaActual,
+        proximo_servicio: null,
+        no_economico: vehiculo.value.id?.toString() || '1',
+        horometro: null,
+        odometro: null,
+        diagnostico: `Reparación iniciada por aprobación de orden de compra #${orden.value.id}`,
+        procedimiento: 'Pendiente de ejecución',
+        notas: `Orden de compra aprobada el ${new Date().toLocaleDateString('es-ES')}`
+      }
+
+      const { data: reparacionCreada, error: errorReparacion } = await supabase
+        .from('reparacion')
+        .insert([nuevaReparacion])
+        .select()
+        .single()
+
+      if (errorReparacion) {
+        console.error('❌ Error al crear reparación:', errorReparacion)
+        throw new Error(`Error al crear reparación: ${errorReparacion.message}`)
+      }
+
+      console.log('✅ Reparación creada:', reparacionCreada)
+
+      // 3. Actualizar estado del vehículo a "reparacion"
+      console.log('🚗 Actualizando estado del vehículo...')
+      const { error: errorVehiculo } = await supabase
+        .from('vehiculo')
+        .update({
+          estado_actual: 'reparacion',
+          ultima_reparacion: fechaActual
+        })
+        .eq('id', vehiculo.value.id)
+
+      if (errorVehiculo) {
+        console.error('❌ Error al actualizar vehículo:', errorVehiculo)
+        throw new Error(`Error al actualizar vehículo: ${errorVehiculo.message}`)
+      }
+
+      console.log('✅ Vehículo actualizado a estado reparación')
+      console.log('🎉 APROBACIÓN completada exitosamente!')
+
+      // Actualizar UI local
+      orden.value.estado = estadoAprobado
+      vehiculo.value.estado_actual = 'reparacion'
+
+    } else if (boton.value === 'rechazado') {
+      // ❌ LÓGICA DE RECHAZO
+      console.log('❌ Procesando RECHAZO...')
+
+      // Solo actualizar orden de compra a "rechazada"
+      const { error: errorOrden } = await supabase
+        .from('orden_compra')
+        .update({
+          estado: 'rechazada'
+        })
+        .eq('id', orden.value.id)
+
+      if (errorOrden) {
+        console.error('❌ Error al rechazar orden:', errorOrden)
+        throw new Error(`Error al rechazar orden: ${errorOrden.message}`)
+      }
+
+      console.log('✅ Orden actualizada a rechazada')
+      console.log('🎉 RECHAZO procesado exitosamente!')
+
+      // Actualizar UI local
+      orden.value.estado = 'rechazada'
+    }
+
+    console.log('💾 Decisión guardada exitosamente en la base de datos')
 
   } catch (err) {
-    console.error('Error al guardar decisión:', err)
-    error.value = 'Error al guardar la decisión'
+    console.error('💥 Error completo al guardar decisión:', err)
+    error.value = `Error al guardar la decisión: ${err.message}`
+    
+    // Resetear el slider en caso de error
+    deslizado.value = false
+    thumbX.value = 0
+    boton.value = null
   }
 }
 
 // Lifecycle
 onMounted(() => {
   cargarDatos()
+})
+
+// Limpiar intervalos al salir del componente
+onUnmounted(() => {
+  if (contadorInterval.value) {
+    clearInterval(contadorInterval.value)
+    console.log('🧹 Interval limpiado al salir del componente')
+  }
+})
+
+// Exportar variables reactivas para el template
+// (Vue Composition API las exporta automáticamente, pero por claridad)
+console.log('📋 Variables exportadas:', { 
+  mostrarModal, 
+  boton, 
+  loading, 
+  error, 
+  orden, 
+  vehiculo, 
+  tiempoRestante 
 })
 </script>
 
