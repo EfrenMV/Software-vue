@@ -1,5 +1,5 @@
 
-<!-- Peticion de refacciones "completo" -->
+<!-- Peticion de refaccion y redireccion a otra vista -->
 <template>
   <Header></Header>
   <div class="vehiculos-view">
@@ -80,12 +80,14 @@
                   <span
                     v-if="vehiculo.costoTotal > 0"
                     class="costo-label"
+                    :class="getCostoVehiculoClass(vehiculo.estado_actual)"
                   >
                     {{ formatearCosto(vehiculo.costoTotal) }}
                   </span>
                   <span
                     v-else
                     class="costo-label costo-pendiente"
+                    :class="getCostoPendienteClass(vehiculo.estado_actual)"
                   >
                     $ Pendiente
                   </span>
@@ -487,6 +489,23 @@ const getEstadoClass = (estado) => {
   return clases[estado] || '';
 };
 
+// Nuevas funciones para los colores de costo de vehículos
+const getCostoVehiculoClass = (estado) => {
+  const clases = {
+    'operativo': 'costo-vehiculo-operativo',
+    'reparacion': 'costo-vehiculo-reparacion'
+  };
+  return clases[estado] || '';
+};
+
+const getCostoPendienteClass = (estado) => {
+  const clases = {
+    'operativo': 'costo-pendiente-operativo',
+    'reparacion': 'costo-pendiente-reparacion'
+  };
+  return clases[estado] || 'costo-pendiente';
+};
+
 const formatearCosto = (costo) => {
   if (!costo || costo === 0) return '$ 0';
   return new Intl.NumberFormat('es-CO', {
@@ -631,16 +650,38 @@ onMounted(() => {
 }
 
 .costo-label {
-  background-color: rgb(19, 154, 124);
   color: rgb(255, 255, 255);
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 10px;
   font-weight: bold;
   white-space: nowrap;
-  border: 1px solid rgb(59, 81, 105);
+  border: 1px solid transparent;
 }
 
+/* Estilos específicos para vehículos operativos */
+.costo-vehiculo-operativo {
+  background-color: #27ae60 !important;
+  border-color: #2c3e50 !important;
+}
+
+.costo-pendiente-operativo {
+  background-color: #34495e !important;
+  border-color: #2c3e50 !important;
+}
+
+/* Estilos específicos para vehículos en reparación */
+.costo-vehiculo-reparacion {
+  background-color: #f39c12 !important;
+  border-color: #2c3e50 !important;
+}
+
+.costo-pendiente-reparacion {
+  background-color: #e67e22 !important;
+  border-color: #2c3e50 !important;
+}
+
+/* Fallback para el estilo original */
 .costo-pendiente {
   background-color: #e74c3c !important;
 }
@@ -852,6 +893,7 @@ onMounted(() => {
 .costo-completada {
   background-color: #2196F3;
 }
+
 
 /* ///////////////////////////////// */
 .vehiculos-view {
