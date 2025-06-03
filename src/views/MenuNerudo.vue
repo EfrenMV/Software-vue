@@ -1,3 +1,4 @@
+
 <!-- Peticion de refacciones "completo" -->
 <template>
   <Header></Header>
@@ -408,7 +409,7 @@ const verDetalleVehiculo = (id) => {
 
 const verDetalleSolicitud = (id) => {
   console.log(`Ver detalle de solicitud: ${id}`);
-  // router.push({ name: 'DetalleSolicitud', params: { id } })
+  router.push({ name: 'confirmacionSolicitud', params: { id } });
 }
 
 // Función para calcular tiempo transcurrido
