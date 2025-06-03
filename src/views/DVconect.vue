@@ -1,7 +1,7 @@
 <template>
   <div class="detalle-vehiculo">
     <Header></Header>
-
+    
     <div class="contenido-scrollable">
       <!-- Loading state -->
       <div v-if="loading" class="loading-container">
@@ -54,8 +54,9 @@
         Error al cargar la información: {{ error }}
       </div>
     </div>
-
-    <div class="menu-fixed">
+    
+    <!-- Menú en la parte inferior dentro del contenedor -->
+    <div class="menu-container">
       <Menu></Menu>
     </div>
   </div>
@@ -266,6 +267,7 @@ onMounted(async () => {
   color: #ffffff;
 }
 
+
 /* Círculos de estado */
 .circulo-verde {
   display: inline-block;
@@ -310,18 +312,23 @@ onMounted(async () => {
   height: 100vh;
   margin: 0 auto;
   background-color: white;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .contenido-scrollable {
-  flex: 1;
   overflow-y: auto;
   padding: 20px;
-  padding-bottom: 80px;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Menú que se queda dentro del contenedor */
+.menu-container {
+  width: 100%;
+  margin-bottom: 64px;
+  background-color: white;
+  border-top: 1px solid #eee;
 }
 
 .fecha-reparacion {
@@ -388,11 +395,12 @@ onMounted(async () => {
   border-radius: 8px;
 }
 
+/*
 .menu-fixed {
   position: fixed;
   bottom: 0;
   width: 100%;
   max-width: 345px;
   z-index: 100;
-}
+}*/
 </style>
