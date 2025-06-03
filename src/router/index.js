@@ -38,11 +38,11 @@ component: () => import('@/views/MenuNerudo.vue'),
   name: 'MenuNerudo',
 component: () => import('@/views/MenuNerudo.vue'),
 },
-{
-  path: '/Detallesvehi',
-  name: 'VehiculoDetalle',
-  component: () => import('@/views/DetalleVehiculoView.vue')
-},
+// {
+//   path: '/Detallesvehi',
+//   name: 'VehiculoDetalle',
+//   component: () => import('@/views/DetalleVehiculoView.vue')
+// },
 {
   path: '/hotwhe',
   name: 'hotwhe',
@@ -52,6 +52,11 @@ component: () => import('@/views/MenuNerudo.vue'),
   path: '/DTCONECT/:id',
   name: 'DTCONECT',
   component: () => import('@/views/DVconect.vue')
+},
+{
+  path: '/confirmacionSolicitud/:id',
+  name: 'confirmacionSolicitud',
+  component: () => import('@/views/ConfirmacionSolicitud.vue')
 }
 
  ]
