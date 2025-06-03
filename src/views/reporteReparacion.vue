@@ -238,7 +238,7 @@ const cargarDatos = async () => {
     loading.value = true
     error.value = null
 
-    const ordenId = 1 // ← PRUEBA CON DIFERENTES IDs QUE TENGAN VEHICULOS DISTINTOS
+    const ordenId = route.params.id // ← PRUEBA CON DIFERENTES IDs QUE TENGAN VEHICULOS DISTINTOS
 
     console.log('🔧 Consultando orden con vehículo ID:', ordenId)
 

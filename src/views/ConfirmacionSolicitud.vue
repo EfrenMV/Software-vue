@@ -21,7 +21,7 @@
         <div class="titulo-principal">
           <h2>🛒 Orden de Compra #{{ orden.id }}</h2>
         </div>
-
+        
         <!-- Estatus separado -->
         <div class="estado-separado">
           <span class="etiqueta-estado" :class="getEstadoClass(orden.estado)">
@@ -73,7 +73,7 @@
               <p class="placa-info">🆔 Placa: {{ vehiculo.placa }}</p>
               <p class="serie-info">🔢 No. Serie: {{ vehiculo.numero_serie }}</p>
               <p class="estado-info">
-                📊 Estado:
+                📊 Estado: 
                 <span class="estado-badge" :class="getEstadoClass(vehiculo.estado_actual)">
                   {{ getEstadoLabel(vehiculo.estado_actual) }}
                 </span>
@@ -121,7 +121,7 @@
               <p class="reporte-value">{{ getEstadoLabel(vehiculo.estado_actual) || 'No disponible' }}</p>
             </div>
           </div>
-
+          
           <div class="reporte-item">
             <span class="reporte-icono">📝</span>
             <div class="reporte-contenido">
@@ -129,7 +129,7 @@
               <p class="reporte-value">{{ orden.observaciones || 'Sin observaciones adicionales' }}</p>
             </div>
           </div>
-
+          
           <div class="reporte-item">
             <span class="reporte-icono">💰</span>
             <div class="reporte-contenido">
@@ -137,7 +137,7 @@
               <p class="reporte-value precio">${{ orden.costo_total || '0' }}</p>
             </div>
           </div>
-
+          
           <div class="reporte-item">
             <span class="reporte-icono">📅</span>
             <div class="reporte-contenido">
@@ -156,6 +156,11 @@
         >✔</button>
 
         <button
+          @click="cancelarYVolver"
+          class="boton-volver"
+        >←</button>
+
+        <button
           @click="seleccionar('rechazado')"
           :class="boton === 'rechazado' ? 'activo-rojo' : 'inactivo'"
         >✖</button>
@@ -165,7 +170,7 @@
       <div v-if="boton" class="slider-container">
         <div
           class="slider"
-          :class="{
+          :class="{ 
             'deslizado-exito': deslizado && boton === 'aprobado',
             'deslizado-rechazo': deslizado && boton === 'rechazado',
             'slider-verde': boton === 'aprobado',
@@ -198,8 +203,8 @@
     :titulo="boton === 'aprobado' ? '¡Orden Aprobada!' : '¡Orden Rechazada!'"
     :mensaje="(boton === 'aprobado'
         ? `La orden de compra fue aprobada exitosamente. Se ha creado una nueva reparación en curso para el vehículo ${vehiculo.marca} ${vehiculo.modelo}.`
-        : `La orden de compra fue rechazada. No se realizarán cambios en el vehículo ${vehiculo.marca} ${vehiculo.modelo}.`) +
-        `\n\n\nRedirigiendo al menú principal en ${tiempoRestante} segundos...`"
+        : `La orden de compra fue rechazada. No se realizarán cambios en el vehículo ${vehiculo.marca} ${vehiculo.modelo}.`) + 
+        `\n\nRedirigiendo al menú principal en ${tiempoRestante} segundos...`"
   />
 </template>
 
@@ -216,6 +221,7 @@ import { supabase } from '@/supabase.js'
 // Variables reactivas
 const mostrarModal = ref(false)
 const boton = ref(null)
+const botonVolver = ref(false) // Nueva variable para el botón de volver
 const loading = ref(true)
 const error = ref(null)
 
@@ -238,7 +244,7 @@ const cargarDatos = async () => {
     loading.value = true
     error.value = null
 
-    const ordenId = 1 // ← PRUEBA CON DIFERENTES IDs QUE TENGAN VEHICULOS DISTINTOS
+    const ordenId = route.params.id // ← PRUEBA CON DIFERENTES IDs QUE TENGAN VEHICULOS DISTINTOS
 
     console.log('🔧 Consultando orden con vehículo ID:', ordenId)
 
@@ -248,7 +254,7 @@ const cargarDatos = async () => {
       .from('vehiculo')
       .select('id, marca, modelo, placa')
       .limit(5)
-
+    
     console.log('🚗 Vehículos en la base de datos:', vehiculosDisponibles)
 
     // También verificar qué órdenes están asignadas a qué vehículos
@@ -256,7 +262,7 @@ const cargarDatos = async () => {
       .from('orden_compra')
       .select('id, vehiculo_id')
       .limit(10)
-
+    
     console.log('📊 Mapeo orden → vehículo:', ordenesVehiculos)
 
     // CONSULTA SIMPLIFICADA: orden_compra + vehículo
@@ -293,14 +299,14 @@ const cargarDatos = async () => {
     // Asignar datos a las variables reactivas
     orden.value = ordenData
     vehiculo.value = ordenData.vehiculo || {}
-
+    
     // DEBUG: Verificar datos del vehículo
     console.log('🚗 Datos del vehículo cargados:', vehiculo.value)
     console.log('🚗 Marca:', vehiculo.value.marca)
     console.log('🚗 Modelo:', vehiculo.value.modelo)
     console.log('🚗 Placa:', vehiculo.value.placa)
     console.log('🚗 ID del vehículo:', vehiculo.value.id)
-
+    
     // Crear nombre completo del vehículo
     if (vehiculo.value.marca && vehiculo.value.modelo) {
       vehiculo.value.nombre_completo = `${vehiculo.value.marca} ${vehiculo.value.modelo}`
@@ -309,20 +315,20 @@ const cargarDatos = async () => {
 
     // Datos mock para campos que no están en esta consulta
     proveedor.value = { nombre: 'Proveedor no especificado' }
-    refaccion.value = {
+    refaccion.value = { 
       nombre: 'Refacción no especificada',
       descripcion: 'Información no disponible en esta consulta',
       precio_unitario: 0,
       cantidad_disponible: 0,
       status: 'pendiente'
     }
-    reparacion.value = {
+    reparacion.value = { 
       diagnostico: 'Información no disponible',
       procedimiento: 'Pendiente',
       notas: 'Sin notas',
       kilometraje: 'N/A'
     }
-    mecanico.value = {
+    mecanico.value = { 
       nombre: 'Sin asignar',
       apellido_paterno: ''
     }
@@ -345,7 +351,7 @@ const getEstadoClass = (estado) => {
     'rechazado': 'estado-inactivo',
     'completado': 'estado-operativo',
     'operativo': 'estado-operativo',
-    'reparacion': 'estado-reparacion',
+    'reparacion': 'estado-reparacion', 
     'inactivo': 'estado-inactivo'
   }
   return clases[estado] || 'estado-pendiente'
@@ -364,10 +370,10 @@ const getStatusRefaccionClass = (status) => {
 // Función para obtener imagen dinámica del vehículo
 const getImagenVehiculo = (marca) => {
   if (!marca) return '/src/components/icons/default-car.png'
-
+  
   const marcaLower = marca.toLowerCase()
   console.log('🚗 Marca del vehículo:', marca, 'Marca procesada:', marcaLower)
-
+  
   // Mapeo de marcas a imágenes
   const imagenes = {
     'bmw': '/src/components/icons/bmw.png',
@@ -380,7 +386,7 @@ const getImagenVehiculo = (marca) => {
     'nissan': '/src/components/icons/nissan.png',
     'honda': '/src/components/icons/honda.png'
   }
-
+  
   return imagenes[marcaLower] || '/src/components/icons/default-car.png'
 }
 
@@ -398,12 +404,12 @@ const getEstadoLabel = (estado) => {
 
 const formatearFecha = (fecha) => {
   if (!fecha) return 'No disponible'
-
+  
   try {
     const date = new Date(fecha)
     return date.toLocaleDateString('es-ES', {
       day: '2-digit',
-      month: '2-digit',
+      month: '2-digit', 
       year: 'numeric'
     })
   } catch (err) {
@@ -414,6 +420,19 @@ const formatearFecha = (fecha) => {
 // Funciones de interacción
 function seleccionar(opcion) {
   boton.value = opcion
+}
+
+// Función para cancelar y volver a MenuNerudo
+const cancelarYVolver = () => {
+  console.log('🔙 Usuario canceló la decisión, regresando a MenuNerudo')
+  
+  // Activar el botón para mostrar el cambio de color
+  botonVolver.value = true
+  
+  // Pequeño delay para que se vea el efecto visual, luego redirigir
+  setTimeout(() => {
+    router.push({ name: 'MenuNerudo' })
+  }, 300) // 300ms para ver el cambio de color
 }
 
 // Variables del slider
@@ -435,10 +454,10 @@ function iniciarDesliz(event) {
   async function terminar() {
     if (thumbX.value >= maxX) {
       deslizado.value = true
-
+      
       //  GUARDAR DECISIÓN EN LA BASE DE DATOS
       await guardarDecision()
-
+      
       mostrarModal.value = true
       tiempoRestante.value = 5
 
@@ -485,7 +504,7 @@ const guardarDecision = async () => {
 
       // 1. Actualizar orden de compra - PROBANDO DIFERENTES VALORES
       console.log('📝 Actualizando orden de compra...')
-
+      
       // Intentar con "aprobada" primero (valor más probable)
       let estadoAprobado = 'aprobada'
       let { error: errorOrden } = await supabase
@@ -611,7 +630,7 @@ const guardarDecision = async () => {
   } catch (err) {
     console.error('💥 Error completo al guardar decisión:', err)
     error.value = `Error al guardar la decisión: ${err.message}`
-
+    
     // Resetear el slider en caso de error
     deslizado.value = false
     thumbX.value = 0
@@ -634,14 +653,15 @@ onUnmounted(() => {
 
 // Exportar variables reactivas para el template
 // (Vue Composition API las exporta automáticamente, pero por claridad)
-console.log('📋 Variables exportadas:', {
-  mostrarModal,
-  boton,
-  loading,
-  error,
-  orden,
-  vehiculo,
-  tiempoRestante
+console.log('📋 Variables exportadas:', { 
+  mostrarModal, 
+  boton, 
+  botonVolver,
+  loading, 
+  error, 
+  orden, 
+  vehiculo, 
+  tiempoRestante 
 })
 </script>
 
@@ -861,7 +881,7 @@ body {
 .botones {
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: 30px;
   margin: 20px 0;
   padding: 20px;
 }
@@ -897,6 +917,13 @@ body {
   color: white;
   transform: scale(1.1);
   box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+}
+
+.activo-azul {
+  background-color: #3498db;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
 }
 
 .slider-container {
@@ -984,92 +1011,92 @@ body {
     max-height: 100vh;
     overflow-y: auto;
   }
-
+  
   .titulo-principal {
     padding: 16px;
   }
-
+  
   .titulo-principal h2 {
     font-size: 18px;
   }
-
+  
   .estado-separado {
     margin: -6px 0 6px 0;
   }
-
+  
   .etiqueta-estado {
     font-size: 11px;
     padding: 6px 14px;
   }
-
+  
   .orden-header, .auto-header, .reporte-header, .adicional-header {
     padding: 12px 16px;
   }
-
+  
   .orden-header h3, .auto-header h3, .reporte-header h3, .adicional-header h3 {
     font-size: 14px;
   }
-
+  
   .datos-orden, .auto-contenido, .detalle-reparacion, .adicional-contenido {
     padding: 16px;
   }
-
+  
   .auto-contenido {
     gap: 16px;
   }
-
+  
   .imagen-auto {
     width: 80px;
     height: 80px;
     padding: 8px;
   }
-
+  
   .vehiculo-nombre {
     font-size: 16px;
   }
-
+  
   .placa-info, .serie-info, .estado-info {
     font-size: 13px;
   }
-
+  
   .estado-badge {
     font-size: 10px;
     padding: 3px 6px;
   }
-
+  
   .botones {
     margin: 15px 0;
-    gap: 30px;
+    gap: 20px;
     padding: 16px;
   }
-
+  
   .botones button {
     width: 60px;
     height: 60px;
     font-size: 24px;
   }
-
+  
   .slider {
     height: 56px;
   }
-
+  
   .slider-thumb {
     width: 44px;
     height: 44px;
     top: 6px;
     left: 6px;
   }
-
+  
   .dato-item, .reporte-item, .info-item {
     padding: 10px 12px;
   }
-
+  
   .dato-item .icono, .reporte-icono, .info-item .icono {
     width: 28px;
     height: 28px;
     font-size: 14px;
   }
-
+  
   .loading-container, .error-container {
     margin: 15px;
     height: 250px;
