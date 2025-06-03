@@ -53,14 +53,12 @@
           </div>
         </div>
 
-        <!-- Mensaje cuando no hay resultados -->
         <div v-if="vehiculosFiltrados.length === 0 && solicitudesFiltradas.length === 0 && !loading" class="no-resultados">
           <i class="fas fa-search"></i>
           <p>No se encontraron resultados que coincidan con tu búsqueda</p>
           <small>Intenta con otro término de búsqueda o cambia el filtro</small>
         </div>
 
-        <!-- Lista de Vehículos (para filtros operativo y reparacion) -->
         <div v-if="filtroActivo !== 'solicitadas'" class="vehiculos-lista">
           <div
             v-for="vehiculo in vehiculosFiltrados"
@@ -101,7 +99,6 @@
           </div>
         </div>
 
-        <!-- Lista de Solicitudes (para filtro solicitadas) -->
         <div v-if="filtroActivo === 'solicitadas'" class="solicitudes-lista">
           <div
             v-for="solicitud in solicitudesFiltradas"
@@ -165,13 +162,12 @@ import { supabase } from '@/supabase';
 // Estado reactivo
 const router = useRouter()
 const todosLosVehiculos = ref([]);
-const todasLasSolicitudes = ref([]); // Nueva: array para solicitudes
+const todasLasSolicitudes = ref([]);
 const filtroActivo = ref('operativo');
 const terminoBusqueda = ref('');
 const loading = ref(false);
 const error = ref(null);
 
-// COMPUTED PROPERTIES - TODO EL FILTRADO EN FRONTEND
 const vehiculosFiltrados = computed(() => {
   if (filtroActivo.value === 'solicitadas') return [];
 
@@ -192,13 +188,11 @@ const vehiculosFiltrados = computed(() => {
   );
 });
 
-// Computed property para solicitudes con ordenamiento personalizado
 const solicitudesFiltradas = computed(() => {
   if (filtroActivo.value !== 'solicitadas') return [];
 
   let solicitudesFiltradas = todasLasSolicitudes.value;
 
-  // Filtrar por búsqueda si hay término
   if (terminoBusqueda.value.trim()) {
     const termino = terminoBusqueda.value.toLowerCase().trim();
     solicitudesFiltradas = todasLasSolicitudes.value.filter(solicitud =>
@@ -219,7 +213,6 @@ const solicitudesFiltradas = computed(() => {
     const prioridadA = ordenEstados[a.estado] || 4;
     const prioridadB = ordenEstados[b.estado] || 4;
 
-    // Si tienen el mismo estado, ordenar por fecha más reciente
     if (prioridadA === prioridadB) {
       return new Date(b.fecha_creacion) - new Date(a.fecha_creacion);
     }
@@ -235,7 +228,6 @@ const contadorEstados = computed(() => {
     solicitadas: 0
   };
 
-  // Filtrar por búsqueda para los contadores de vehículos
   let vehiculosParaContar = todosLosVehiculos.value;
   if (terminoBusqueda.value.trim()) {
     const termino = terminoBusqueda.value.toLowerCase().trim();
@@ -245,19 +237,16 @@ const contadorEstados = computed(() => {
     );
   }
 
-  // Contar vehículos por estado
   vehiculosParaContar.forEach(vehiculo => {
     if (vehiculo.estado_actual === 'operativo') contador.operativo++;
     if (vehiculo.estado_actual === 'reparacion') contador.reparacion++;
   });
 
-  // Contar solicitudes
   contador.solicitadas = solicitudesFiltradas.value.length || todasLasSolicitudes.value.length;
 
   return contador;
 });
 
-// MÉTODO MODIFICADO para cargar TODAS las solicitudes con ordenamiento
 const cargarSolicitudes = async () => {
   try {
     const { data, error: sbError } = await supabase
@@ -284,11 +273,9 @@ const cargarSolicitudes = async () => {
 
     if (sbError) throw sbError;
 
-    // Procesar cada solicitud
     const solicitudesConDatos = data.map(solicitud => {
       let vehiculoInfo = 'Vehículo no especificado';
 
-      // Si hay información del vehículo, formatearla
       if (solicitud.vehiculo) {
         vehiculoInfo = `${solicitud.vehiculo.marca} ${solicitud.vehiculo.modelo} - ${solicitud.vehiculo.placa}`;
       }
@@ -314,13 +301,11 @@ const cargarSolicitudes = async () => {
   }
 };
 
-// MÉTODO MODIFICADO - CON IMÁGENES DESDE EVIDENCIA
 const cargarVehiculos = async () => {
   try {
     loading.value = true;
     error.value = null;
 
-    // Cargar vehículos y solicitudes en paralelo
     await Promise.all([
       cargarDatosVehiculos(),
       cargarSolicitudes()
@@ -335,7 +320,6 @@ const cargarVehiculos = async () => {
 };
 
 const cargarDatosVehiculos = async () => {
-  // Consulta original para vehículos
   const { data, error: sbError } = await supabase
     .from('vehiculo')
     .select(`
@@ -423,7 +407,6 @@ const verDetalleVehiculo = (id) => {
 }
 
 const verDetalleSolicitud = (id) => {
-  // Aquí puedes implementar la navegación al detalle de la solicitud
   console.log(`Ver detalle de solicitud: ${id}`);
   // router.push({ name: 'DetalleSolicitud', params: { id } })
 }
@@ -449,7 +432,6 @@ const calcularTiempoTranscurrido = (fecha) => {
   return meses === 1 ? 'Hace 1 mes' : `Hace ${meses} meses`;
 };
 
-// NUEVAS FUNCIONES para manejar los diferentes estados de solicitud
 const formatearEstadoSolicitud = (estado) => {
   const estados = {
     'revision': 'REVISIÓN',
@@ -495,7 +477,6 @@ const getCostoClass = (estado) => {
   return clases[estado] || 'costo-revision';
 };
 
-// Funciones de utilidad (las originales)
 const getEstadoClass = (estado) => {
   const clases = {
     'operativo': 'operativo',
@@ -541,14 +522,12 @@ const handleImageError = (event) => {
   event.target.src = '/img/vehiculos/default.png';
 };
 
-// Lifecycle hooks
 onMounted(() => {
   cargarVehiculos();
 });
 </script>
 
 <style scoped>
-/* Estilos originales */
 .loading-container, .error-container {
   display: flex;
   flex-direction: column;
@@ -594,7 +573,6 @@ onMounted(() => {
   background-color: #2980b9;
 }
 
-/* Estilos para vehículos (originales) */
 .vehiculos-lista {
   width: 100%;
   display: flex;
@@ -666,7 +644,6 @@ onMounted(() => {
   background-color: #e74c3c !important;
 }
 
-/* ESTILOS MEJORADOS PARA SOLICITUDES CON DIFERENTES ESTADOS */
 .solicitudes-lista {
   width: 100%;
   display: flex;
@@ -691,7 +668,6 @@ onMounted(() => {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Estilos específicos por estado de solicitud */
 .solicitud-revision {
   border-left: 4px solid #9C27B0;
 }
@@ -741,7 +717,6 @@ onMounted(() => {
   background-color: #2196F3;
 }
 
-/* Badges por estado */
 .badge-estado {
   color: white;
   padding: 4px 10px;
@@ -877,7 +852,7 @@ onMounted(() => {
   background-color: #2196F3;
 }
 
-/* Estilos originales restantes */
+/* ///////////////////////////////// */
 .vehiculos-view {
   width: 345px;
   height: 650px;
